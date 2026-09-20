@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { LogOut, Moon, Sun } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
+import { avatarGradient } from "@/lib/avatar-color";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,7 +51,9 @@ export function Topbar() {
   return (
     <header className="flex h-14 shrink-0 items-center justify-end gap-2 border-b border-border px-6">
       <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Alternar tema">
-        {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        <span key={theme} className="animate-in zoom-in-50 duration-200">
+          {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </span>
       </Button>
 
       <DropdownMenu>
@@ -58,7 +61,12 @@ export function Topbar() {
           render={
             <Button variant="ghost" className="gap-2 px-2">
               <Avatar className="size-7">
-                <AvatarFallback className="text-xs">{initialsOf(displayName || "?")}</AvatarFallback>
+                <AvatarFallback
+                  className="text-xs text-white"
+                  style={{ background: avatarGradient(displayName || "?") }}
+                >
+                  {initialsOf(displayName || "?")}
+                </AvatarFallback>
               </Avatar>
               <span className="hidden text-sm sm:inline">{displayName}</span>
             </Button>

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
+import { AuthenticationError } from "@/lib/auth/errors";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +41,13 @@ export default function LoginPage() {
       await signIn(values.email, values.password);
       router.push("/hoje");
     } catch (error) {
-      setServerError(error instanceof Error ? error.message : "Nao foi possivel entrar.");
+      setServerError(
+        error instanceof AuthenticationError
+          ? error.friendlyMessage
+          : error instanceof Error
+            ? error.message
+            : "Nao foi possivel entrar."
+      );
     }
   }
 
@@ -53,7 +60,7 @@ export default function LoginPage() {
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {serverError && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="animate-shake">
               <AlertDescription>{serverError}</AlertDescription>
             </Alert>
           )}

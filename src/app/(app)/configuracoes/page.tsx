@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const NOTIFICATION_LABELS: Record<string, string> = {
   missing_lunch_return: "Avisar quando faltar registrar o retorno do almoco",
@@ -43,48 +44,63 @@ export default function SettingsPage() {
     <div className="max-w-3xl space-y-6">
       <h1 className="text-2xl font-semibold">Configuracoes</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Tema</CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-2">
-          <Button variant={theme === "light" ? "default" : "outline"} onClick={() => { setTheme("light"); updateSettings({ theme: "light" }).catch(() => {}); }}>
-            Claro
-          </Button>
-          <Button variant={theme === "dark" ? "default" : "outline"} onClick={() => { setTheme("dark"); updateSettings({ theme: "dark" }).catch(() => {}); }}>
-            Escuro
-          </Button>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="preferencias">
+        <TabsList>
+          <TabsTrigger value="preferencias">Preferencias</TabsTrigger>
+          <TabsTrigger value="jornada">Jornada</TabsTrigger>
+          <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Notificacoes</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {Object.entries(NOTIFICATION_LABELS).map(([key, label]) => {
-            const enabled = (settings?.notifications_enabled as Record<string, boolean> | null)?.[key] ?? true;
-            return (
-              <label key={key} className="flex items-center gap-2 text-sm">
-                <Checkbox
-                  checked={enabled}
-                  onCheckedChange={(checked) => {
-                    const current = (settings?.notifications_enabled as Record<string, boolean>) ?? {};
-                    updateSettings({ notifications_enabled: { ...current, [key]: Boolean(checked) } }).catch(
-                      () => toast.error("Erro ao salvar preferencia.")
-                    );
-                  }}
-                />
-                {label}
-              </label>
-            );
-          })}
-        </CardContent>
-      </Card>
+        <TabsContent value="preferencias" className="space-y-6 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Tema</CardTitle>
+            </CardHeader>
+            <CardContent className="flex gap-2">
+              <Button variant={theme === "light" ? "default" : "outline"} onClick={() => { setTheme("light"); updateSettings({ theme: "light" }).catch(() => {}); }}>
+                Claro
+              </Button>
+              <Button variant={theme === "dark" ? "default" : "outline"} onClick={() => { setTheme("dark"); updateSettings({ theme: "dark" }).catch(() => {}); }}>
+                Escuro
+              </Button>
+            </CardContent>
+          </Card>
 
-      {user && <ScheduleCard userId={user.id} />}
-      {user && <SalaryCard userId={user.id} />}
-      {user && <OvertimeRulesCard userId={user.id} />}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Notificacoes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Object.entries(NOTIFICATION_LABELS).map(([key, label]) => {
+                const enabled = (settings?.notifications_enabled as Record<string, boolean> | null)?.[key] ?? true;
+                return (
+                  <label key={key} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={enabled}
+                      onCheckedChange={(checked) => {
+                        const current = (settings?.notifications_enabled as Record<string, boolean>) ?? {};
+                        updateSettings({ notifications_enabled: { ...current, [key]: Boolean(checked) } }).catch(
+                          () => toast.error("Erro ao salvar preferencia.")
+                        );
+                      }}
+                    />
+                    {label}
+                  </label>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="jornada" className="pt-4">
+          {user && <ScheduleCard userId={user.id} />}
+        </TabsContent>
+
+        <TabsContent value="financeiro" className="space-y-6 pt-4">
+          {user && <SalaryCard userId={user.id} />}
+          {user && <OvertimeRulesCard userId={user.id} />}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

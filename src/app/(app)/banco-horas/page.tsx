@@ -2,7 +2,8 @@
 
 /** Tela 'Banco de Horas': saldo diario/semanal/mensal/anual/acumulado e evolucao. */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CalendarDays, CalendarRange, PiggyBank, TrendingUp, Wallet } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeDay, runningBalance } from "@/lib/calculation-service";
@@ -23,7 +24,12 @@ import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-reposit
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
 import { StatCard } from "@/components/shared/stat-card";
+
+function balanceAccent(minutes: number): string {
+  return minutes >= 0 ? "text-success" : "text-destructive";
+}
 
 type ChartPeriod = "month" | "year" | "last12months";
 
@@ -118,11 +124,37 @@ export default function BankOfHoursPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-        <StatCard label="Saldo do dia" value={fmt(todayCalc?.balanceMinutes ?? 0)} />
-        <StatCard label="Saldo da semana" value={fmt(weekDays.reduce((t, d) => t + d.balanceMinutes, 0))} />
-        <StatCard label="Saldo do mes" value={fmt(monthDays.reduce((t, d) => t + d.balanceMinutes, 0))} />
-        <StatCard label="Saldo do ano" value={fmt(yearDays.reduce((t, d) => t + d.balanceMinutes, 0))} />
-        <StatCard label="Saldo acumulado" value={fmt(accumulatedMinutes)} caption={`Periodo selecionado`} />
+        <StatCard
+          label="Saldo do dia"
+          value={fmt(todayCalc?.balanceMinutes ?? 0)}
+          icon={CalendarDays}
+          accentClassName={balanceAccent(todayCalc?.balanceMinutes ?? 0)}
+        />
+        <StatCard
+          label="Saldo da semana"
+          value={fmt(weekDays.reduce((t, d) => t + d.balanceMinutes, 0))}
+          icon={CalendarRange}
+          accentClassName={balanceAccent(weekDays.reduce((t, d) => t + d.balanceMinutes, 0))}
+        />
+        <StatCard
+          label="Saldo do mes"
+          value={fmt(monthDays.reduce((t, d) => t + d.balanceMinutes, 0))}
+          icon={Wallet}
+          accentClassName={balanceAccent(monthDays.reduce((t, d) => t + d.balanceMinutes, 0))}
+        />
+        <StatCard
+          label="Saldo do ano"
+          value={fmt(yearDays.reduce((t, d) => t + d.balanceMinutes, 0))}
+          icon={TrendingUp}
+          accentClassName={balanceAccent(yearDays.reduce((t, d) => t + d.balanceMinutes, 0))}
+        />
+        <StatCard
+          label="Saldo acumulado"
+          value={fmt(accumulatedMinutes)}
+          caption="Periodo selecionado"
+          icon={PiggyBank}
+          accentClassName={balanceAccent(accumulatedMinutes)}
+        />
       </div>
 
       <Card>
@@ -131,13 +163,27 @@ export default function BankOfHoursPage() {
         </CardHeader>
         <CardContent className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="bancoHorasGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-chart-1)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--color-chart-1)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis dataKey="label" fontSize={12} />
               <YAxis fontSize={12} />
-              <Tooltip />
-              <Line type="monotone" dataKey="horas" name="Banco de horas (h)" stroke="var(--color-chart-1)" strokeWidth={2} dot={false} />
-            </LineChart>
+              <Tooltip content={ChartTooltipContent} />
+              <Area
+                type="monotone"
+                dataKey="horas"
+                name="Banco de horas (h)"
+                stroke="var(--color-chart-1)"
+                strokeWidth={2}
+                fill="url(#bancoHorasGradient)"
+                animationDuration={600}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>

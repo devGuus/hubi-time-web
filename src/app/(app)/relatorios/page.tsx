@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { Decimal } from "decimal.js";
 import { toast } from "sonner";
+import { Check, FileDown, FileSpreadsheet, FileText, Loader2, type LucideIcon } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeDay, overtimeValue, regularHoursValue, summarizePeriod } from "@/lib/calculation-service";
@@ -16,12 +17,18 @@ import { ScheduleRepository } from "@/lib/repositories/schedule-repository";
 import { hourlyRateOf, SalaryRepository } from "@/lib/repositories/salary-repository";
 import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-repository";
 import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PeriodFilter, rangeForOption, type PeriodOption } from "@/components/shared/period-filter";
 
 type ReportType = "work" | "finance";
 type ExportFormat = "xlsx" | "csv" | "pdf";
+
+const FORMATS: { format: ExportFormat; label: string; description: string; icon: LucideIcon }[] = [
+  { format: "xlsx", label: "Excel", description: "Planilha .xlsx formatada", icon: FileSpreadsheet },
+  { format: "csv", label: "CSV", description: "Dados brutos, separados por virgula", icon: FileText },
+  { format: "pdf", label: "PDF", description: "Pronto para impressao", icon: FileDown },
+];
 
 export default function ReportsPage() {
   const { user } = useAuth();
@@ -32,6 +39,7 @@ export default function ReportsPage() {
   });
   const [reportType, setReportType] = useState<ReportType>("work");
   const [loadingFormat, setLoadingFormat] = useState<ExportFormat | null>(null);
+  const [succeededFormat, setSucceededFormat] = useState<ExportFormat | null>(null);
 
   async function handleExport(format: ExportFormat) {
     if (!user) return;
@@ -123,6 +131,8 @@ export default function ReportsPage() {
       else exportPdf(filename, rows, headers, title);
 
       toast.success("Relatorio exportado com sucesso.");
+      setSucceededFormat(format);
+      setTimeout(() => setSucceededFormat(null), 1500);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao exportar relatorio.");
     } finally {
@@ -149,16 +159,38 @@ export default function ReportsPage() {
         </Select>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Button onClick={() => handleExport("xlsx")} disabled={loadingFormat !== null}>
-          {loadingFormat === "xlsx" ? "Exportando..." : "Exportar Excel (.xlsx)"}
-        </Button>
-        <Button variant="outline" onClick={() => handleExport("csv")} disabled={loadingFormat !== null}>
-          {loadingFormat === "csv" ? "Exportando..." : "Exportar CSV"}
-        </Button>
-        <Button variant="outline" onClick={() => handleExport("pdf")} disabled={loadingFormat !== null}>
-          {loadingFormat === "pdf" ? "Exportando..." : "Exportar PDF"}
-        </Button>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {FORMATS.map(({ format, label, description, icon: Icon }) => {
+          const isLoading = loadingFormat === format;
+          const isSuccess = succeededFormat === format;
+          const disabled = loadingFormat !== null;
+          return (
+            <Card
+              key={format}
+              interactive={!disabled}
+              onClick={() => !disabled && handleExport(format)}
+              className={disabled && !isLoading ? "pointer-events-none opacity-50" : undefined}
+            >
+              <CardContent className="flex items-center gap-3 pt-6">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  {isLoading ? (
+                    <Loader2 className="size-5 animate-spin" />
+                  ) : isSuccess ? (
+                    <Check className="size-5 animate-in zoom-in-50 text-success" />
+                  ) : (
+                    <Icon className="size-5" />
+                  )}
+                </span>
+                <div>
+                  <div className="font-medium">
+                    {isLoading ? "Exportando..." : `Exportar ${label}`}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{description}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

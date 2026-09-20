@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
+import { AuthenticationError } from "@/lib/auth/errors";
 import { PENDING_VERIFICATION_EMAIL_KEY } from "@/lib/auth/session-storage-keys";
 import { OTP_CODE_LENGTH } from "@/lib/constants";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -52,7 +53,13 @@ export default function VerifyEmailPage() {
       router.push("/hoje");
     } catch (err) {
       setCode("");
-      setError(err instanceof Error ? err.message : "Codigo invalido.");
+      setError(
+        err instanceof AuthenticationError
+          ? err.friendlyMessage
+          : err instanceof Error
+            ? err.message
+            : "Codigo invalido."
+      );
     } finally {
       setVerifying(false);
     }
@@ -64,7 +71,13 @@ export default function VerifyEmailPage() {
       await resendSignupOtp(email);
       setCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nao foi possivel reenviar o codigo.");
+      setError(
+        err instanceof AuthenticationError
+          ? err.friendlyMessage
+          : err instanceof Error
+            ? err.message
+            : "Nao foi possivel reenviar o codigo."
+      );
     }
   }
 
@@ -78,7 +91,7 @@ export default function VerifyEmailPage() {
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="animate-shake">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}

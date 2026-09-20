@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { AlertCircle, CalendarCheck, Clock, Flame, Gauge, PiggyBank, Timer } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { summarizePeriod, computeDay, type DayCalculation } from "@/lib/calculation-service";
@@ -23,6 +24,7 @@ import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-reposit
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
 import { StatCard } from "@/components/shared/stat-card";
 
 export default function HoursControlPage() {
@@ -97,23 +99,25 @@ export default function HoursControlPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Horas previstas" value={formatMinutesAsHours(summary.expectedMinutes)} />
-        <StatCard label="Horas trabalhadas" value={formatMinutesAsHours(summary.workedMinutes)} />
+        <StatCard label="Horas previstas" value={formatMinutesAsHours(summary.expectedMinutes)} icon={Clock} />
+        <StatCard label="Horas trabalhadas" value={formatMinutesAsHours(summary.workedMinutes)} icon={Timer} />
         <StatCard
           label="Saldo do mes"
           value={formatMinutesAsHours(balanceMinutes, true)}
-          accentClassName={balanceMinutes >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-destructive"}
+          icon={Gauge}
+          accentClassName={balanceMinutes >= 0 ? "text-success" : "text-destructive"}
         />
-        <StatCard label="Media diaria" value={formatMinutesAsHours(averageDaily)} />
+        <StatCard label="Media diaria" value={formatMinutesAsHours(averageDaily)} icon={Gauge} />
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Dias trabalhados" value={String(summary.workedDaysCount)} />
-        <StatCard label="Dias incompletos" value={String(summary.incompleteDaysCount)} />
-        <StatCard label="Horas extras" value={formatMinutesAsHours(overtimeMinutes)} />
+        <StatCard label="Dias trabalhados" value={String(summary.workedDaysCount)} icon={CalendarCheck} />
+        <StatCard label="Dias incompletos" value={String(summary.incompleteDaysCount)} icon={AlertCircle} />
+        <StatCard label="Horas extras" value={formatMinutesAsHours(overtimeMinutes)} icon={Flame} />
         <StatCard
           label="Banco de horas do mes"
           value={formatMinutesAsHours(balanceMinutes, true)}
-          accentClassName={balanceMinutes >= 0 ? "text-emerald-600 dark:text-emerald-500" : "text-destructive"}
+          icon={PiggyBank}
+          accentClassName={balanceMinutes >= 0 ? "text-success" : "text-destructive"}
         />
       </div>
 
@@ -128,8 +132,14 @@ export default function HoursControlPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="label" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip />
-                <Bar dataKey="horas" name="Trabalhadas (h)" fill="var(--color-chart-1)" radius={4} />
+                <Tooltip content={ChartTooltipContent} cursor={{ fill: "var(--muted)" }} />
+                <Bar
+                  dataKey="horas"
+                  name="Trabalhadas (h)"
+                  fill="var(--color-chart-1)"
+                  radius={4}
+                  animationDuration={500}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -145,10 +155,22 @@ export default function HoursControlPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="label" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip />
+                <Tooltip content={ChartTooltipContent} cursor={{ fill: "var(--muted)" }} />
                 <Legend />
-                <Bar dataKey="previsto" name="Previsto (h)" fill="var(--color-chart-2)" radius={4} />
-                <Bar dataKey="realizado" name="Realizado (h)" fill="var(--color-chart-1)" radius={4} />
+                <Bar
+                  dataKey="previsto"
+                  name="Previsto (h)"
+                  fill="var(--color-chart-2)"
+                  radius={4}
+                  animationDuration={500}
+                />
+                <Bar
+                  dataKey="realizado"
+                  name="Realizado (h)"
+                  fill="var(--color-chart-1)"
+                  radius={4}
+                  animationDuration={500}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

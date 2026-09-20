@@ -204,9 +204,7 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
 
       <TabsContent value="registro" className="space-y-4 pt-4">
         {isIncomplete && (
-          <p className="text-sm text-amber-600 dark:text-amber-500">
-            Registro deste dia ainda esta incompleto.
-          </p>
+          <p className="text-sm text-warning">Registro deste dia ainda esta incompleto.</p>
         )}
         {warnings.length > 0 && (
           <Alert variant="destructive">

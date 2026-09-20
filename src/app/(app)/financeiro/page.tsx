@@ -6,7 +6,8 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Decimal } from "decimal.js";
-import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { BadgeDollarSign, Calculator, Coins, Flame, PiggyBank, Timer, TrendingUp, Wallet } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import {
@@ -31,6 +32,7 @@ import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-reposit
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
 import { StatCard } from "@/components/shared/stat-card";
 
 type PeriodOption = "month" | "quarter" | "semester" | "year";
@@ -141,16 +143,25 @@ export default function FinancePage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Salario mensal vigente" value={currentSalary ? formatBRL(currentSalary.salary) : "Nao configurado"} />
-        <StatCard label="Valor estimado da hora" value={currentSalary ? formatBRL(hourlyRate) : "--"} />
-        <StatCard label="Horas trabalhadas" value={formatMinutesAsHours(summary.workedMinutes)} />
-        <StatCard label="Horas extras" value={formatMinutesAsHours(overtimeMinutes)} />
+        <StatCard
+          label="Salario mensal vigente"
+          value={currentSalary ? formatBRL(currentSalary.salary) : "Nao configurado"}
+          icon={Wallet}
+        />
+        <StatCard label="Valor estimado da hora" value={currentSalary ? formatBRL(hourlyRate) : "--"} icon={Coins} />
+        <StatCard label="Horas trabalhadas" value={formatMinutesAsHours(summary.workedMinutes)} icon={Timer} />
+        <StatCard label="Horas extras" value={formatMinutesAsHours(overtimeMinutes)} icon={Flame} />
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Banco de horas do periodo" value={formatMinutesAsHours(summary.workedMinutes - summary.expectedMinutes, true)} />
-        <StatCard label="Estimativa horas normais" value={formatBRL(regularVal)} />
-        <StatCard label="Estimativa horas extras" value={formatBRL(overtimeVal)} />
-        <StatCard label="Estimativa total" value={formatBRL(totalVal)} accentClassName="text-primary" />
+        <StatCard
+          label="Banco de horas do periodo"
+          value={formatMinutesAsHours(summary.workedMinutes - summary.expectedMinutes, true)}
+          icon={PiggyBank}
+          accentClassName={summary.workedMinutes - summary.expectedMinutes >= 0 ? "text-success" : "text-destructive"}
+        />
+        <StatCard label="Estimativa horas normais" value={formatBRL(regularVal)} icon={Calculator} />
+        <StatCard label="Estimativa horas extras" value={formatBRL(overtimeVal)} icon={BadgeDollarSign} />
+        <StatCard label="Estimativa total" value={formatBRL(totalVal)} icon={TrendingUp} accentClassName="text-primary" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -160,13 +171,27 @@ export default function FinancePage() {
           </CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={salaryChartData}>
+              <AreaChart data={salaryChartData}>
+                <defs>
+                  <linearGradient id="salarioGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-chart-1)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--color-chart-1)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="label" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip />
-                <Line type="monotone" dataKey="salario" name="Salario (R$)" stroke="var(--color-chart-1)" strokeWidth={2} />
-              </LineChart>
+                <Tooltip content={ChartTooltipContent} />
+                <Area
+                  type="monotone"
+                  dataKey="salario"
+                  name="Salario (R$)"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={2}
+                  fill="url(#salarioGradient)"
+                  animationDuration={600}
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -181,10 +206,10 @@ export default function FinancePage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="label" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip />
+                <Tooltip content={ChartTooltipContent} cursor={{ fill: "var(--muted)" }} />
                 <Legend />
-                <Bar dataKey="normais" name="Normais (h)" fill="var(--color-chart-2)" radius={4} />
-                <Bar dataKey="extras" name="Extras (h)" fill="var(--color-chart-1)" radius={4} />
+                <Bar dataKey="normais" name="Normais (h)" fill="var(--color-chart-2)" radius={4} animationDuration={500} />
+                <Bar dataKey="extras" name="Extras (h)" fill="var(--color-chart-1)" radius={4} animationDuration={500} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

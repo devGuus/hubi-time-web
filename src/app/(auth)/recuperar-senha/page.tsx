@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
+import { AuthenticationError } from "@/lib/auth/errors";
 import { OTP_CODE_LENGTH } from "@/lib/constants";
 import { isValidEmail, passwordsMatch, validatePassword } from "@/lib/validators";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -37,7 +38,13 @@ export default function ForgotPasswordPage() {
       await requestPasswordReset(email);
       setStep("confirm");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nao foi possivel enviar o codigo.");
+      setError(
+        err instanceof AuthenticationError
+          ? err.friendlyMessage
+          : err instanceof Error
+            ? err.message
+            : "Nao foi possivel enviar o codigo."
+      );
     } finally {
       setLoading(false);
     }
@@ -63,7 +70,13 @@ export default function ForgotPasswordPage() {
       await confirmPasswordReset(email, code, newPassword);
       router.push("/login");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Nao foi possivel redefinir a senha.");
+      setError(
+        err instanceof AuthenticationError
+          ? err.friendlyMessage
+          : err instanceof Error
+            ? err.message
+            : "Nao foi possivel redefinir a senha."
+      );
     } finally {
       setLoading(false);
     }
@@ -78,7 +91,7 @@ export default function ForgotPasswordPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="animate-shake">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -113,7 +126,7 @@ export default function ForgotPasswordPage() {
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="animate-shake">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}

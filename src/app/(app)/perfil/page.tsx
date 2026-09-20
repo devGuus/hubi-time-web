@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/lib/auth/auth-provider";
+import { avatarGradient } from "@/lib/avatar-color";
 import { UserRepository } from "@/lib/repositories/user-repository";
 import { createClient } from "@/lib/supabase/client";
 import { passwordsMatch, validatePassword } from "@/lib/validators";
@@ -21,10 +22,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+function initialsOf(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -92,7 +103,20 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-semibold">Meu Perfil</h1>
+      <div className="flex items-center gap-4">
+        <Avatar className="size-16">
+          <AvatarFallback
+            className="text-lg text-white"
+            style={{ background: avatarGradient(profile?.name || user?.email || "?") }}
+          >
+            {initialsOf(profile?.name || user?.email || "?")}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <h1 className="text-2xl font-semibold">{profile?.name || "Meu Perfil"}</h1>
+          <p className="text-sm text-muted-foreground">{user?.email}</p>
+        </div>
+      </div>
 
       <Card>
         <CardHeader>

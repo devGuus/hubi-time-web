@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { useAuth } from "@/lib/auth/auth-provider";
+import { AuthenticationError } from "@/lib/auth/errors";
 import { PENDING_VERIFICATION_EMAIL_KEY } from "@/lib/auth/session-storage-keys";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,13 @@ export default function RegisterPage() {
       sessionStorage.setItem(PENDING_VERIFICATION_EMAIL_KEY, values.email);
       router.push("/verificar-email");
     } catch (error) {
-      setServerError(error instanceof Error ? error.message : "Nao foi possivel criar a conta.");
+      setServerError(
+        error instanceof AuthenticationError
+          ? error.friendlyMessage
+          : error instanceof Error
+            ? error.message
+            : "Nao foi possivel criar a conta."
+      );
     }
   }
 
@@ -64,7 +71,7 @@ export default function RegisterPage() {
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {serverError && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="animate-shake">
               <AlertDescription>{serverError}</AlertDescription>
             </Alert>
           )}

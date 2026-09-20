@@ -3,6 +3,7 @@
 /** Tela de historico: listagem filtravel de registros e registros arquivados. */
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Archive, MoreHorizontal, Pencil } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeDay } from "@/lib/calculation-service";
@@ -14,6 +15,12 @@ import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-reposit
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -23,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { DayEditor } from "@/components/shared/day-editor";
 import { PeriodFilter, rangeForOption, type PeriodOption } from "@/components/shared/period-filter";
 
@@ -68,6 +76,19 @@ export default function HistoryPage() {
     loadRecords();
   }, [loadRecords]);
 
+  async function handleArchive(record: WorkRecord) {
+    if (!user) return;
+    const supabase = createClient();
+    const workRepository = new WorkRepository(supabase);
+    try {
+      await workRepository.archive(record.id, user.id, user.id);
+      toast.success("Registro arquivado.");
+      await loadRecords();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao arquivar.");
+    }
+  }
+
   async function handleRestore(record: WorkRecord) {
     if (!user) return;
     const supabase = createClient();
@@ -109,6 +130,7 @@ export default function HistoryPage() {
                   <TableHead>Previstas</TableHead>
                   <TableHead>Saldo</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -129,7 +151,7 @@ export default function HistoryPage() {
                   return (
                     <TableRow
                       key={date}
-                      className="cursor-pointer hover:bg-accent/50"
+                      className="group cursor-pointer hover:bg-accent/50"
                       onClick={() => setOpenDate(date)}
                     >
                       <TableCell>{formatDateBR(date)}</TableCell>
@@ -140,7 +162,39 @@ export default function HistoryPage() {
                       <TableCell>{formatMinutesAsHours(calc.workedMinutes)}</TableCell>
                       <TableCell>{formatMinutesAsHours(calc.expectedMinutes)}</TableCell>
                       <TableCell>{formatMinutesAsHours(calc.balanceMinutes, true)}</TableCell>
-                      <TableCell>{calc.isComplete ? "Completo" : "Incompleto"}</TableCell>
+                      <TableCell>
+                        <span className={cn("font-medium", calc.isComplete ? "text-success" : "text-warning")}>
+                          {calc.isComplete ? "Completo" : "Incompleto"}
+                        </span>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                className="opacity-0 transition-opacity group-hover:opacity-100"
+                                aria-label="Acoes do registro"
+                              >
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            }
+                          />
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setOpenDate(date)}>
+                              <Pencil className="mr-2 size-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            {record && (
+                              <DropdownMenuItem onClick={() => handleArchive(record)}>
+                                <Archive className="mr-2 size-4" />
+                                Arquivar
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
                   );
                 })}

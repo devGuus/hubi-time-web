@@ -26,7 +26,12 @@ export function TimeField({ label, value, onChange, disabled, error }: TimeField
 
   return (
     <div className="space-y-1.5">
-      <Label className="text-muted-foreground text-xs font-medium">{label}</Label>
+      <Label className="flex items-center gap-1.5 text-muted-foreground text-xs font-medium">
+        <span
+          className={`size-1.5 rounded-full transition-colors ${value ? "bg-success" : "bg-muted-foreground/30"}`}
+        />
+        {label}
+      </Label>
       <div className="flex items-center gap-2">
         <Input
           type="time"
@@ -39,7 +44,14 @@ export function TimeField({ label, value, onChange, disabled, error }: TimeField
           Agora
         </Button>
         {value && (
-          <Button type="button" variant="ghost" size="sm" onClick={() => onChange(null)} disabled={disabled}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="animate-in fade-in duration-150"
+            onClick={() => onChange(null)}
+            disabled={disabled}
+          >
             Limpar
           </Button>
         )}

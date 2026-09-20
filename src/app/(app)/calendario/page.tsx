@@ -2,24 +2,69 @@
 
 /** Tela de calendario mensal com indicacao visual de status por dia. */
 import { useCallback, useEffect, useState } from "react";
+import type { DayButton } from "react-day-picker";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { DayType } from "@/lib/constants";
+import { formatMinutesAsHours } from "@/lib/formatting";
 import { monthRange, todayIso, toLocalDate, type DateISO } from "@/lib/dates";
 import { detectTimeInconsistencies } from "@/lib/validators";
+import { computeDay } from "@/lib/calculation-service";
 import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-repository";
 import { createClient } from "@/lib/supabase/client";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DayEditor } from "@/components/shared/day-editor";
 
 const LEGEND = [
-  { color: "bg-emerald-500", label: "Completo" },
-  { color: "bg-amber-500", label: "Incompleto" },
-  { color: "bg-red-500", label: "Inconsistencia" },
+  { color: "bg-success", label: "Completo" },
+  { color: "bg-warning", label: "Incompleto" },
+  { color: "bg-destructive", label: "Inconsistencia" },
   { color: "bg-muted-foreground/30", label: "Sem jornada" },
   { color: "bg-primary", label: "Selecionado" },
 ];
+
+const STATUS_LABEL_PT: Record<"complete" | "incomplete" | "inconsistent", string> = {
+  complete: "Completo",
+  incomplete: "Incompleto",
+  inconsistent: "Inconsistencia",
+};
+
+/** Dia do calendario com preview rapido (horas trabalhadas/status) ao passar o mouse. */
+function DayButtonWithPreview({
+  recordsByDate,
+  ...props
+}: React.ComponentProps<typeof DayButton> & { recordsByDate: Record<DateISO, WorkRecord> }) {
+  const dateIso = `${props.day.date.getFullYear()}-${(props.day.date.getMonth() + 1).toString().padStart(2, "0")}-${props.day.date.getDate().toString().padStart(2, "0")}`;
+  const record = recordsByDate[dateIso];
+  const status = statusOf(record);
+
+  const calc = record
+    ? computeDay(
+        {
+          work_date: dateIso,
+          entry_time: record.entry_time,
+          lunch_start: record.lunch_start,
+          lunch_end: record.lunch_end,
+          exit_time: record.exit_time,
+          day_type: record.day_type as DayType,
+        },
+        null
+      )
+    : null;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<CalendarDayButton {...props} />} />
+      <TooltipContent>
+        {status
+          ? `${STATUS_LABEL_PT[status]}${calc ? ` - ${formatMinutesAsHours(calc.workedMinutes)} trabalhadas` : ""}`
+          : "Sem jornada registrada"}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 function statusOf(record: WorkRecord | undefined): "complete" | "incomplete" | "inconsistent" | null {
   if (!record) return null;
@@ -68,6 +113,13 @@ export default function CalendarPage() {
     if (status) byStatus[status].push(toLocalDate(dateIso));
   }
 
+  const dayButton = useCallback(
+    (props: React.ComponentProps<typeof CalendarDayButton>) => (
+      <DayButtonWithPreview recordsByDate={records} {...props} />
+    ),
+    [records]
+  );
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Calendario</h1>
@@ -92,10 +144,11 @@ export default function CalendarPage() {
               month={monthCursor}
               modifiers={byStatus}
               modifiersClassNames={{
-                complete: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400",
-                incomplete: "bg-amber-500/20 text-amber-700 dark:text-amber-400",
-                inconsistent: "bg-red-500/20 text-red-700 dark:text-red-400",
+                complete: "bg-success/20 text-success",
+                incomplete: "bg-warning/20 text-warning",
+                inconsistent: "bg-destructive/20 text-destructive",
               }}
+              components={{ DayButton: dayButton }}
             />
           </CardContent>
         </Card>

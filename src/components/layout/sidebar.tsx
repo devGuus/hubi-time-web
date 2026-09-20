@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   BarChart3,
   Calendar,
@@ -32,25 +33,55 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const activeIndex = NAV_ITEMS.findIndex(
+    ({ href }) => pathname === href || pathname.startsWith(`${href}/`)
+  );
+
+  const navRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [indicator, setIndicator] = useState<{ top: number; height: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    const item = itemRefs.current[activeIndex];
+    if (!nav || !item) {
+      setIndicator(null);
+      return;
+    }
+    const navRect = nav.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    setIndicator({ top: itemRect.top - navRect.top, height: itemRect.height });
+  }, [activeIndex]);
 
   return (
     <aside className="flex h-svh w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar p-4">
-      <div className="mb-6 px-2 text-lg font-semibold text-sidebar-foreground">Hubi Time</div>
-      <nav className="flex flex-1 flex-col gap-1">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+      <div className="mb-6 px-2 text-lg font-semibold bg-linear-to-r from-primary to-chart-3 bg-clip-text text-transparent">
+        Hubi Time
+      </div>
+      <nav ref={navRef} className="relative flex flex-1 flex-col gap-1">
+        {indicator && (
+          <div
+            className="absolute inset-x-0 rounded-md bg-sidebar-primary/10 transition-[top,height] duration-300 ease-out"
+            style={{ top: indicator.top, height: indicator.height }}
+          />
+        )}
+        {NAV_ITEMS.map(({ href, label, icon: Icon }, index) => {
+          const active = index === activeIndex;
           return (
             <Link
               key={href}
+              ref={(el) => {
+                itemRefs.current[index] = el;
+              }}
               href={href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "group relative z-10 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-sidebar-primary/10 text-sidebar-primary"
+                  ? "text-sidebar-primary"
                   : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
             >
-              <Icon className="size-4" />
+              <Icon className="size-4 transition-transform group-hover:scale-110" />
               {label}
             </Link>
           );

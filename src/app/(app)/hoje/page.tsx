@@ -2,6 +2,7 @@
 
 /** Tela "Hoje": visao rapida do dia atual com relogio ao vivo e registro. */
 import { useEffect, useState } from "react";
+import { CheckCircle2, Clock, Scale } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeDay } from "@/lib/calculation-service";
@@ -11,8 +12,9 @@ import { formatMinutesAsHours } from "@/lib/formatting";
 import { ScheduleRepository, type WorkScheduleEntry } from "@/lib/repositories/schedule-repository";
 import type { WorkRecord } from "@/lib/repositories/work-repository";
 import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { DayEditor } from "@/components/shared/day-editor";
+import { StatCard } from "@/components/shared/stat-card";
 
 export default function TodayPage() {
   const { user } = useAuth();
@@ -67,36 +69,18 @@ export default function TodayPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Horas trabalhadas ate agora
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">
-            {calc ? formatMinutesAsHours(calc.workedMinutes) : "00h00"}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Saldo estimado do dia
-            </CardTitle>
-          </CardHeader>
-          <CardContent
-            className={`text-2xl font-semibold ${
-              calc && calc.balanceMinutes < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-500"
-            }`}
-          >
-            {calc ? formatMinutesAsHours(calc.balanceMinutes, true) : "00h00"}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Situacao do registro</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{status}</CardContent>
-        </Card>
+        <StatCard
+          label="Horas trabalhadas ate agora"
+          value={calc ? formatMinutesAsHours(calc.workedMinutes) : "00h00"}
+          icon={Clock}
+        />
+        <StatCard
+          label="Saldo estimado do dia"
+          value={calc ? formatMinutesAsHours(calc.balanceMinutes, true) : "00h00"}
+          icon={Scale}
+          accentClassName={calc && calc.balanceMinutes < 0 ? "text-destructive" : "text-success"}
+        />
+        <StatCard label="Situacao do registro" value={status} icon={CheckCircle2} />
       </div>
 
       <Card>
