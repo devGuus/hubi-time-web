@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { KeyRound, LogOut, User } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { avatarGradient } from "@/lib/avatar-color";
@@ -27,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScreenIntro } from "@/components/shared/screen-intro";
 
 function initialsOf(name: string): string {
   return name
@@ -103,6 +105,16 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl space-y-6">
+      <ScreenIntro
+        screenKey="perfil"
+        title="Meu Perfil"
+        description="Seus dados de conta."
+        tips={[
+          { icon: User, text: "Atualize seu nome de exibicao a qualquer momento." },
+          { icon: KeyRound, text: "Troque sua senha de acesso aqui." },
+          { icon: LogOut, text: "Saia da conta com seguranca - sempre com confirmacao antes." },
+        ]}
+      />
       <div className="flex items-center gap-4">
         <Avatar className="size-16">
           <AvatarFallback

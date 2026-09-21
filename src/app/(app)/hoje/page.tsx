@@ -14,6 +14,7 @@ import type { WorkRecord } from "@/lib/repositories/work-repository";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { DayEditor } from "@/components/shared/day-editor";
+import { ScreenIntro } from "@/components/shared/screen-intro";
 import { StatCard } from "@/components/shared/stat-card";
 
 export default function TodayPage() {
@@ -61,6 +62,16 @@ export default function TodayPage() {
 
   return (
     <div className="space-y-6">
+      <ScreenIntro
+        screenKey="hoje"
+        title="Bem-vindo ao Hubi Time"
+        description="Esta e a tela Hoje: sua visao rapida do dia atual."
+        tips={[
+          { icon: Clock, text: "Acompanhe em tempo real quantas horas voce ja trabalhou hoje." },
+          { icon: Scale, text: "Veja o saldo estimado do dia assim que registrar seus horarios." },
+          { icon: CheckCircle2, text: "Registre entrada, almoco e saida direto aqui embaixo." },
+        ]}
+      />
       <div>
         <h1 className="text-2xl font-semibold">Hoje, {formatDateBR(today)}</h1>
         <p className="text-muted-foreground">

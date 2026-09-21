@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { Decimal } from "decimal.js";
 import { toast } from "sonner";
-import { Check, FileDown, FileSpreadsheet, FileText, Loader2, type LucideIcon } from "lucide-react";
+import { Check, FileDown, FileSpreadsheet, FileText, ListFilter, Loader2, type LucideIcon } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeDay, overtimeValue, regularHoursValue, summarizePeriod } from "@/lib/calculation-service";
@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PeriodFilter, rangeForOption, type PeriodOption } from "@/components/shared/period-filter";
+import { ScreenIntro } from "@/components/shared/screen-intro";
 
 type ReportType = "work" | "finance";
 type ExportFormat = "xlsx" | "csv" | "pdf";
@@ -142,6 +143,15 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
+      <ScreenIntro
+        screenKey="relatorios"
+        title="Relatorios"
+        description="Exporte seus dados para usar fora do app."
+        tips={[
+          { icon: ListFilter, text: "Escolha o periodo e o tipo de relatorio: jornada ou financeiro." },
+          { icon: FileSpreadsheet, text: "Exporte em Excel, CSV ou PDF com um clique nos cards abaixo." },
+        ]}
+      />
       <h1 className="text-2xl font-semibold">Relatorios</h1>
 
       <PeriodFilter value={filter} onChange={setFilter} />

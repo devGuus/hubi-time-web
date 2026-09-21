@@ -6,7 +6,6 @@ import { useLayoutEffect, useRef, useState } from "react";
 import {
   BarChart3,
   Calendar,
-  Clock,
   FileText,
   History,
   Home,
@@ -20,7 +19,6 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/hoje", label: "Hoje", icon: Home },
-  { href: "/registrar", label: "Registrar Horas", icon: Clock },
   { href: "/calendario", label: "Calendario", icon: Calendar },
   { href: "/historico", label: "Historico", icon: History },
   { href: "/controle-horas", label: "Controle de Horas", icon: BarChart3 },

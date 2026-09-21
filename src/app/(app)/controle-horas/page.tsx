@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertCircle, CalendarCheck, Clock, Flame, Gauge, PiggyBank, Timer } from "lucide-react";
+import { AlertCircle, BarChart3, CalendarCheck, Clock, Flame, Gauge, PiggyBank, Timer } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { summarizePeriod, computeDay, type DayCalculation } from "@/lib/calculation-service";
@@ -25,6 +25,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
+import { ScreenIntro } from "@/components/shared/screen-intro";
 import { StatCard } from "@/components/shared/stat-card";
 
 export default function HoursControlPage() {
@@ -84,6 +85,16 @@ export default function HoursControlPage() {
 
   return (
     <div className="space-y-6">
+      <ScreenIntro
+        screenKey="controle-horas"
+        title="Controle de Horas"
+        description="Indicadores e graficos do seu mes."
+        tips={[
+          { icon: Gauge, text: "Acompanhe saldo do mes, horas extras e media diaria num unico painel." },
+          { icon: BarChart3, text: "Os graficos comparam horas previstas x realizadas, por dia e por semana." },
+          { icon: CalendarCheck, text: "Use as setas ao lado do titulo para navegar entre os meses." },
+        ]}
+      />
       <h1 className="text-2xl font-semibold">Controle de Horas</h1>
 
       <div className="flex items-center gap-2">

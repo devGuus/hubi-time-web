@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Decimal } from "decimal.js";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { BadgeDollarSign, Calculator, Coins, Flame, PiggyBank, Timer, TrendingUp, Wallet } from "lucide-react";
+import { AlertCircle, BadgeDollarSign, Calculator, Coins, Flame, PiggyBank, Timer, TrendingUp, Wallet } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import {
@@ -33,6 +33,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
+import { ScreenIntro } from "@/components/shared/screen-intro";
 import { StatCard } from "@/components/shared/stat-card";
 
 type PeriodOption = "month" | "quarter" | "semester" | "year";
@@ -122,6 +123,16 @@ export default function FinancePage() {
 
   return (
     <div className="space-y-6">
+      <ScreenIntro
+        screenKey="financeiro"
+        title="Financeiro"
+        description="Estimativas de valor das suas horas trabalhadas."
+        tips={[
+          { icon: Wallet, text: "Configure seu salario e carga mensal em Configuracoes para ver os valores aqui." },
+          { icon: Coins, text: "Veja estimativas de horas normais, extras e o total do periodo." },
+          { icon: AlertCircle, text: "Sao estimativas para controle pessoal - nao substituem sua folha de pagamento oficial." },
+        ]}
+      />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Financeiro</h1>

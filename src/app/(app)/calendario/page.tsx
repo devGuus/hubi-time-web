@@ -3,6 +3,7 @@
 /** Tela de calendario mensal com indicacao visual de status por dia. */
 import { useCallback, useEffect, useState } from "react";
 import type { DayButton } from "react-day-picker";
+import { CalendarDays, MousePointerClick, Pencil } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { DayType } from "@/lib/constants";
@@ -16,6 +17,7 @@ import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DayEditor } from "@/components/shared/day-editor";
+import { ScreenIntro } from "@/components/shared/screen-intro";
 
 const LEGEND = [
   { color: "bg-success", label: "Completo" },
@@ -122,6 +124,16 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6">
+      <ScreenIntro
+        screenKey="calendario"
+        title="Calendario"
+        description="Veja e edite qualquer dia do mes num so lugar."
+        tips={[
+          { icon: CalendarDays, text: "As cores mostram o status de cada dia: completo, incompleto ou com inconsistencia." },
+          { icon: MousePointerClick, text: "Passe o mouse sobre um dia para uma previa rapida das horas trabalhadas." },
+          { icon: Pencil, text: "Clique em qualquer dia para editar os horarios direto no painel ao lado." },
+        ]}
+      />
       <h1 className="text-2xl font-semibold">Calendario</h1>
 
       <div className="flex flex-wrap items-center gap-4">

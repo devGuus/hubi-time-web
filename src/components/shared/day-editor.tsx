@@ -3,7 +3,7 @@
 /**
  * Editor de um dia de jornada: os 4 horarios, tipo de dia, observacoes,
  * avisos de inconsistencia, salvar/arquivar/restaurar e aba de historico.
- * Equivalente ao DayEditorWidget do desktop - usado em Hoje e Registrar.
+ * Equivalente ao DayEditorWidget do desktop - usado em Hoje, Calendario e Historico.
  */
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";

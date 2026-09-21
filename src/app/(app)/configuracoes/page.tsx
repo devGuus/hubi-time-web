@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Decimal } from "decimal.js";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { Clock, SlidersHorizontal, Wallet } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { DEFAULT_WEEKLY_HOURS, WEEKDAY_KEYS, WEEKDAY_LABELS_PT, type WeekdayKey } from "@/lib/constants";
@@ -28,6 +29,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScreenIntro } from "@/components/shared/screen-intro";
 
 const NOTIFICATION_LABELS: Record<string, string> = {
   missing_lunch_return: "Avisar quando faltar registrar o retorno do almoco",
@@ -42,6 +44,16 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-3xl space-y-6">
+      <ScreenIntro
+        screenKey="configuracoes"
+        title="Configuracoes"
+        description="Personalize sua jornada e preferencias."
+        tips={[
+          { icon: SlidersHorizontal, text: "Em 'Preferencias', ajuste tema e notificacoes." },
+          { icon: Clock, text: "Em 'Jornada', defina sua carga horaria - cada mudanca cria uma nova vigencia, sem apagar o historico." },
+          { icon: Wallet, text: "Em 'Financeiro', configure seu salario e os percentuais de hora extra." },
+        ]}
+      />
       <h1 className="text-2xl font-semibold">Configuracoes</h1>
 
       <Tabs defaultValue="preferencias">

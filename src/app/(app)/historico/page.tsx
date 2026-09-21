@@ -3,7 +3,7 @@
 /** Tela de historico: listagem filtravel de registros e registros arquivados. */
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Archive, MoreHorizontal, Pencil } from "lucide-react";
+import { Archive, ListFilter, MoreHorizontal, Pencil } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeDay } from "@/lib/calculation-service";
@@ -33,6 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DayEditor } from "@/components/shared/day-editor";
 import { PeriodFilter, rangeForOption, type PeriodOption } from "@/components/shared/period-filter";
+import { ScreenIntro } from "@/components/shared/screen-intro";
 
 export default function HistoryPage() {
   const { user } = useAuth();
@@ -106,6 +107,16 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-6">
+      <ScreenIntro
+        screenKey="historico"
+        title="Historico"
+        description="Consulte e filtre todos os seus registros."
+        tips={[
+          { icon: ListFilter, text: "Filtre por periodo: hoje, semana, mes, ano ou um intervalo personalizado." },
+          { icon: MoreHorizontal, text: "Passe o mouse sobre uma linha para editar ou arquivar aquele registro." },
+          { icon: Archive, text: "Registros arquivados ficam na aba 'Arquivados' e podem ser restaurados quando quiser." },
+        ]}
+      />
       <h1 className="text-2xl font-semibold">Historico</h1>
 
       <Tabs defaultValue="registros" onValueChange={(v) => v === "arquivados" && loadArchived()}>

@@ -3,7 +3,7 @@
 /** Tela 'Banco de Horas': saldo diario/semanal/mensal/anual/acumulado e evolucao. */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { CalendarDays, CalendarRange, PiggyBank, TrendingUp, Wallet } from "lucide-react";
+import { CalendarDays, CalendarRange, PiggyBank, SlidersHorizontal, TrendingUp, Wallet } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeDay, runningBalance } from "@/lib/calculation-service";
@@ -25,6 +25,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
+import { ScreenIntro } from "@/components/shared/screen-intro";
 import { StatCard } from "@/components/shared/stat-card";
 
 function balanceAccent(minutes: number): string {
@@ -109,6 +110,16 @@ export default function BankOfHoursPage() {
 
   return (
     <div className="space-y-6">
+      <ScreenIntro
+        screenKey="banco-horas"
+        title="Banco de Horas"
+        description="Seu saldo acumulado ao longo do tempo."
+        tips={[
+          { icon: PiggyBank, text: "Veja o saldo do dia, da semana, do mes, do ano e o total acumulado." },
+          { icon: TrendingUp, text: "O grafico mostra a evolucao do seu banco de horas no periodo escolhido." },
+          { icon: SlidersHorizontal, text: "Troque o periodo (mes, ano ou ultimos 12 meses) no seletor no topo." },
+        ]}
+      />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Banco de Horas</h1>
         <Select value={period} onValueChange={(v) => setPeriod(v as ChartPeriod)}>

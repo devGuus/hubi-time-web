@@ -2,7 +2,7 @@
 
 Versao web do [Hubi Time](https://github.com/devGuus/Hubi-Time) - controle de jornada, banco de horas e financeiro pessoal. Mesma funcionalidade do app desktop (PySide6), mesmo backend Supabase (mesmo banco, mesmos usuarios), construida com **Next.js 16 + shadcn/ui + Supabase**.
 
-> Estado atual: **completo** - todas as 14 telas (Hoje, Registrar, Calendario, Historico, Controle de Horas, Banco de Horas, Financeiro, Relatorios, Configuracoes, Perfil + fluxo de autenticacao) construidas, com paridade de funcionalidades com o desktop. Build de producao, lint e os 35 testes passam sem erros.
+> Estado atual: **completo** - todas as 13 telas (Hoje, Calendario, Historico, Controle de Horas, Banco de Horas, Financeiro, Relatorios, Configuracoes, Perfil + fluxo de autenticacao) construidas, com paridade de funcionalidades com o desktop. "Registrar Horas" foi removida por ser redundante com o Calendario (mesma edicao de dia, so sem visualizacao mensal). Build de producao, lint e os 35 testes passam sem erros.
 
 ## Por que reaproveitar o mesmo Supabase
 
@@ -27,7 +27,7 @@ src/
 |-- app/
 |   |-- (auth)/          # login, cadastro, verificar-email, recuperar-senha
 |   |-- (app)/           # area logada: layout com sidebar + topbar
-|   |   |-- hoje/ registrar/ calendario/ historico/
+|   |   |-- hoje/ calendario/ historico/
 |   |   |-- controle-horas/ banco-horas/ financeiro/ relatorios/
 |   |   `-- configuracoes/ perfil/
 |   `-- page.tsx         # redireciona "/" conforme sessao (via proxy)
