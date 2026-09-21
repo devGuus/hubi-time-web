@@ -134,11 +134,11 @@ export default function HistoryPage() {
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Entrada</TableHead>
-                  <TableHead>Almoco</TableHead>
-                  <TableHead>Retorno</TableHead>
+                  <TableHead className="hidden md:table-cell">Almoco</TableHead>
+                  <TableHead className="hidden md:table-cell">Retorno</TableHead>
                   <TableHead>Saida</TableHead>
                   <TableHead>Trabalhadas</TableHead>
-                  <TableHead>Previstas</TableHead>
+                  <TableHead className="hidden md:table-cell">Previstas</TableHead>
                   <TableHead>Saldo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-10" />
@@ -167,11 +167,17 @@ export default function HistoryPage() {
                     >
                       <TableCell>{formatDateBR(date)}</TableCell>
                       <TableCell>{formatTimeOrPlaceholder(record?.entry_time)}</TableCell>
-                      <TableCell>{formatTimeOrPlaceholder(record?.lunch_start)}</TableCell>
-                      <TableCell>{formatTimeOrPlaceholder(record?.lunch_end)}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {formatTimeOrPlaceholder(record?.lunch_start)}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {formatTimeOrPlaceholder(record?.lunch_end)}
+                      </TableCell>
                       <TableCell>{formatTimeOrPlaceholder(record?.exit_time)}</TableCell>
                       <TableCell>{formatMinutesAsHours(calc.workedMinutes)}</TableCell>
-                      <TableCell>{formatMinutesAsHours(calc.expectedMinutes)}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {formatMinutesAsHours(calc.expectedMinutes)}
+                      </TableCell>
                       <TableCell>{formatMinutesAsHours(calc.balanceMinutes, true)}</TableCell>
                       <TableCell>
                         <span className={cn("font-medium", calc.isComplete ? "text-success" : "text-warning")}>
@@ -185,7 +191,7 @@ export default function HistoryPage() {
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                className="opacity-0 transition-opacity group-hover:opacity-100"
+                                className="opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100"
                                 aria-label="Acoes do registro"
                               >
                                 <MoreHorizontal className="size-4" />

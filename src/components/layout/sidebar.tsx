@@ -29,7 +29,8 @@ const NAV_ITEMS = [
   { href: "/perfil", label: "Perfil", icon: User },
 ] as const;
 
-export function Sidebar() {
+/** Conteudo da navegacao, compartilhado entre a sidebar fixa (desktop) e a gaveta (mobile). */
+export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const activeIndex = NAV_ITEMS.findIndex(
     ({ href }) => pathname === href || pathname.startsWith(`${href}/`)
@@ -52,7 +53,7 @@ export function Sidebar() {
   }, [activeIndex]);
 
   return (
-    <aside className="flex h-svh w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar p-4">
+    <>
       <div className="mb-6 px-2 text-lg font-semibold bg-linear-to-r from-primary to-chart-3 bg-clip-text text-transparent">
         Hubi Time
       </div>
@@ -72,6 +73,7 @@ export function Sidebar() {
                 itemRefs.current[index] = el;
               }}
               href={href}
+              onClick={onNavigate}
               className={cn(
                 "group relative z-10 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 active
@@ -85,6 +87,16 @@ export function Sidebar() {
           );
         })}
       </nav>
+    </>
+  );
+}
+
+/** Sidebar fixa - visivel apenas em telas grandes (lg+). Em telas menores, a navegacao
+ * vira uma gaveta (Sheet) acionada pelo botao de menu no Topbar. */
+export function Sidebar() {
+  return (
+    <aside className="hidden h-svh w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex">
+      <SidebarNav />
     </aside>
   );
 }
