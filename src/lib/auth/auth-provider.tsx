@@ -178,7 +178,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, loadProfileAndSettings]);
 
   const updateSettings = useCallback(
-    async (fields: Partial<Pick<UserSettings, "theme" | "notifications_enabled">>) => {
+    async (
+      fields: Partial<
+        Pick<UserSettings, "theme" | "notifications_enabled" | "count_early_arrival_as_overtime">
+      >
+    ) => {
       if (!user) return;
       const updated = await userRepository.updateSettings(user.id, fields);
       setSettings(updated);
