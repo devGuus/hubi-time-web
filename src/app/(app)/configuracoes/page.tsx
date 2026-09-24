@@ -153,8 +153,8 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="text-base">Chegada antecipada</CardTitle>
               <CardDescription>
-                Chegar antes do horario de entrada configurado abaixo nao vale como hora extra por padrao -
-                voce so &quot;chegou mais cedo&quot;. Desligue se quiser que qualquer chegada antecipada conte como
+                Chegar antes do horario de entrada, está configurado que nao vale como hora extra -
+                voce so &quot;chegou mais cedo&quot;. Ative se quiser que qualquer chegada antecipada conte como
                 hora extra.
               </CardDescription>
             </CardHeader>
