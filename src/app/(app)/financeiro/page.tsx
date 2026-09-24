@@ -7,11 +7,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Decimal } from "decimal.js";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AlertCircle, BadgeDollarSign, Calculator, Coins, Flame, PiggyBank, Timer, TrendingUp, Wallet } from "lucide-react";
+import { AlertCircle, BadgeDollarSign, Calculator, Coins, Flame, Timer, TrendingUp, Wallet } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
+import { balanceDisplay } from "@/lib/balance-display";
 import {
   computeDay,
+  resolveOvertimeOptions,
   overtimeValue,
   regularHoursValue,
   summarizePeriod,
@@ -54,7 +56,7 @@ function rangeFor(option: PeriodOption): [DateISO, DateISO] {
 }
 
 export default function FinancePage() {
-  const { user } = useAuth();
+  const { user, settings } = useAuth();
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [records, setRecords] = useState<WorkRecord[]>([]);
   const [schedules, setSchedules] = useState<WorkScheduleEntry[]>([]);
@@ -101,12 +103,15 @@ export default function FinancePage() {
           exit_time: record?.exit_time ?? null,
           day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
         },
-        schedule ? { weekly_hours: schedule.weeklyHours } : null
+        schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
+        undefined,
+        resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
       );
     });
-  }, [records, schedules, start, end]);
+  }, [records, schedules, start, end, settings?.count_early_arrival_as_overtime]);
 
   const summary = summarizePeriod(days, start, end);
+  const periodBalance = balanceDisplay(summary.workedMinutes - summary.expectedMinutes);
   const currentSalary = SalaryRepository.pickEffective(salaryHistory, todayIso());
   const applicableRule = SalaryRepository.pickEffectiveRule(overtimeRules, todayIso());
   const hourlyRate = currentSalary ? hourlyRateOf(currentSalary) : new Decimal(0);
@@ -166,9 +171,9 @@ export default function FinancePage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
           label="Banco de horas do periodo"
-          value={formatMinutesAsHours(summary.workedMinutes - summary.expectedMinutes, true)}
-          icon={PiggyBank}
-          accentClassName={summary.workedMinutes - summary.expectedMinutes >= 0 ? "text-success" : "text-destructive"}
+          value={periodBalance.text}
+          icon={periodBalance.icon}
+          accentClassName={periodBalance.accentClassName}
         />
         <StatCard label="Estimativa horas normais" value={formatBRL(regularVal)} icon={Calculator} />
         <StatCard label="Estimativa horas extras" value={formatBRL(overtimeVal)} icon={BadgeDollarSign} />

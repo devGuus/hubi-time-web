@@ -54,7 +54,12 @@ export class UserRepository {
 
   async updateSettings(
     userId: string,
-    fields: Partial<Pick<UserSettings, "theme" | "locale" | "notifications_enabled" | "keep_signed_in">>
+    fields: Partial<
+      Pick<
+        UserSettings,
+        "theme" | "locale" | "notifications_enabled" | "keep_signed_in" | "count_early_arrival_as_overtime"
+      >
+    >
   ): Promise<UserSettings> {
     const { data, error } = await this.client
       .from("user_settings")

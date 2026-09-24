@@ -4,7 +4,7 @@ import { Decimal } from "decimal.js";
 
 import type { DateISO } from "@/lib/dates";
 import type { Database } from "@/types/database";
-import { translatePostgrestError } from "./errors";
+import { NotFoundError, translatePostgrestError } from "./errors";
 
 export interface SalaryEntry {
   id: string;
@@ -114,6 +114,58 @@ export class SalaryRepository {
       .single();
     if (error) throw translatePostgrestError(error, "criar regra de hora extra");
     return toOvertimeRule(data);
+  }
+
+  async update(
+    id: string,
+    userId: string,
+    fields: { effectiveFrom: DateISO; salary: Decimal; monthlyHours: Decimal }
+  ): Promise<SalaryEntry> {
+    const { data, error } = await this.client
+      .from("salary_history")
+      .update({
+        effective_from: fields.effectiveFrom,
+        salary: fields.salary.toNumber(),
+        monthly_hours: fields.monthlyHours.toNumber(),
+      })
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("*")
+      .maybeSingle();
+    if (error) throw translatePostgrestError(error, "atualizar vigencia salarial");
+    if (!data) throw new NotFoundError("Vigencia salarial nao encontrada.");
+    return toSalaryEntry(data);
+  }
+
+  async delete(id: string, userId: string): Promise<void> {
+    const { error } = await this.client.from("salary_history").delete().eq("id", id).eq("user_id", userId);
+    if (error) throw translatePostgrestError(error, "excluir vigencia salarial");
+  }
+
+  async updateOvertimeRule(
+    id: string,
+    userId: string,
+    fields: { name: string; percentage: Decimal; effectiveFrom: DateISO }
+  ): Promise<OvertimeRule> {
+    const { data, error } = await this.client
+      .from("overtime_rules")
+      .update({
+        name: fields.name,
+        percentage: fields.percentage.toNumber(),
+        effective_from: fields.effectiveFrom,
+      })
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("*")
+      .maybeSingle();
+    if (error) throw translatePostgrestError(error, "atualizar regra de hora extra");
+    if (!data) throw new NotFoundError("Regra de hora extra nao encontrada.");
+    return toOvertimeRule(data);
+  }
+
+  async deleteOvertimeRule(id: string, userId: string): Promise<void> {
+    const { error } = await this.client.from("overtime_rules").delete().eq("id", id).eq("user_id", userId);
+    if (error) throw translatePostgrestError(error, "excluir regra de hora extra");
   }
 
   static pickEffective(entries: SalaryEntry[], atDate: DateISO): SalaryEntry | null {

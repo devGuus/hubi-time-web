@@ -26,7 +26,9 @@ interface AuthContextValue {
   changePassword: (newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-  updateSettings: (fields: Partial<Pick<UserSettings, "theme" | "notifications_enabled">>) => Promise<void>;
+  updateSettings: (
+    fields: Partial<Pick<UserSettings, "theme" | "notifications_enabled" | "count_early_arrival_as_overtime">>
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);

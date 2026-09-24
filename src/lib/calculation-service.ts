@@ -20,6 +20,37 @@ export interface WorkRecordFields {
 
 export interface ScheduleFields {
   weekly_hours: Record<WeekdayKey, number>;
+  /** Horario de entrada padrao ("HH:MM"). Usado para decidir chegada antecipada. */
+  standard_entry_time?: string | null;
+}
+
+export interface DayOvertimeOptions {
+  /** Se true, chegar antes do standard_entry_time conta como hora extra (sem "clipping"). */
+  countEarlyArrivalAsOvertime?: boolean;
+}
+
+/** Resolve a opcao efetiva do dia: excecao do proprio registro, se marcada,
+ * senao a configuracao geral do usuario. */
+export function resolveOvertimeOptions(
+  recordFlag: boolean | null | undefined,
+  globalSetting: boolean | null | undefined
+): DayOvertimeOptions {
+  return { countEarlyArrivalAsOvertime: recordFlag ?? globalSetting ?? false };
+}
+
+/** Recorta o horario de entrada para o padrao configurado quando a chegada
+ * antecipada nao deve contar como hora extra - so afeta os minutos
+ * calculados, nunca o horario exibido/guardado. */
+function clipEarlyArrival(
+  record: WorkRecordFields,
+  schedule: ScheduleFields | null,
+  options?: DayOvertimeOptions
+): WorkRecordFields {
+  if (options?.countEarlyArrivalAsOvertime) return record;
+  const standardEntry = schedule?.standard_entry_time;
+  if (!standardEntry || !record.entry_time) return record;
+  if (timeToMinutes(record.entry_time) >= timeToMinutes(standardEntry)) return record;
+  return { ...record, entry_time: standardEntry };
 }
 
 export interface OvertimeRuleFields {
@@ -135,24 +166,26 @@ export function expectedMinutesForDay(
 export function computeDay(
   record: WorkRecordFields,
   schedule: ScheduleFields | null,
-  now?: Date
+  now?: Date,
+  options?: DayOvertimeOptions
 ): DayCalculation {
-  let worked = computeWorkedMinutes(record);
+  const effective = clipEarlyArrival(record, schedule, options);
+  let worked = computeWorkedMinutes(effective);
   const expected = expectedMinutesForDay(record.work_date, record.day_type, schedule);
   const morning =
-    record.entry_time && record.lunch_start
-      ? Math.max(timeToMinutes(record.lunch_start) - timeToMinutes(record.entry_time), 0)
+    effective.entry_time && effective.lunch_start
+      ? Math.max(timeToMinutes(effective.lunch_start) - timeToMinutes(effective.entry_time), 0)
       : 0;
   const afternoon =
-    record.lunch_end && record.exit_time
-      ? Math.max(timeToMinutes(record.exit_time) - timeToMinutes(record.lunch_end), 0)
+    effective.lunch_end && effective.exit_time
+      ? Math.max(timeToMinutes(effective.exit_time) - timeToMinutes(effective.lunch_end), 0)
       : 0;
 
   const isComplete = isRecordComplete(record);
   const isInProgress = Boolean(record.entry_time) && !isComplete;
 
   if (now && record.work_date === toIso(now) && isInProgress) {
-    worked = computeElapsedMinutesUntilNow(record, now);
+    worked = computeElapsedMinutesUntilNow(effective, now);
   }
 
   return {

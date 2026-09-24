@@ -22,6 +22,7 @@ import { ConflictError } from "@/lib/repositories/errors";
 import { detectTimeInconsistencies } from "@/lib/validators";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,6 +82,7 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
   const [exitTime, setExitTime] = useState<string | null>(null);
   const [dayType, setDayType] = useState<DayType>(DayType.NORMAL);
   const [notes, setNotes] = useState("");
+  const [earlyArrivalIsOvertime, setEarlyArrivalIsOvertime] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -94,6 +96,7 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
       setExitTime(found?.exit_time?.slice(0, 5) ?? null);
       setDayType((found?.day_type as DayType) ?? DayType.NORMAL);
       setNotes(found?.notes ?? "");
+      setEarlyArrivalIsOvertime(found?.count_early_arrival_as_overtime ?? false);
       setHistory(null);
       onChanged?.(found);
     } catch (error) {
@@ -129,6 +132,7 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
         exit_time: exitTime,
         day_type: dayType,
         notes: notes.trim() || null,
+        count_early_arrival_as_overtime: earlyArrivalIsOvertime || null,
       };
       const saved = record
         ? await workRepository.update(record.id, user.id, record.version, payload)
@@ -233,6 +237,15 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
           <TimeField label="Retorno" value={lunchEnd} onChange={setLunchEnd} disabled={!isEditable} />
           <TimeField label="Saida" value={exitTime} onChange={setExitTime} disabled={!isEditable} />
         </div>
+
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox
+            checked={earlyArrivalIsOvertime}
+            onCheckedChange={(checked) => setEarlyArrivalIsOvertime(Boolean(checked))}
+            disabled={!isEditable}
+          />
+          Cheguei mais cedo de proposito hoje (contar como hora extra)
+        </label>
 
         <div className="max-w-xs space-y-1.5">
           <Label className="text-xs font-medium text-muted-foreground">Tipo de dia</Label>

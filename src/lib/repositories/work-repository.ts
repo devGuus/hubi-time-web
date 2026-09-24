@@ -16,6 +16,8 @@ export interface WorkRecordFieldsPayload {
   exit_time: string | null;
   day_type: WorkRecord["day_type"];
   notes: string | null;
+  /** null = segue a configuracao geral; true/false = excecao so para este dia. */
+  count_early_arrival_as_overtime?: boolean | null;
 }
 
 export class WorkRepository {

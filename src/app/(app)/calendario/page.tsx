@@ -10,7 +10,8 @@ import { DayType } from "@/lib/constants";
 import { formatMinutesAsHours } from "@/lib/formatting";
 import { monthRange, todayIso, toLocalDate, type DateISO } from "@/lib/dates";
 import { detectTimeInconsistencies } from "@/lib/validators";
-import { computeDay } from "@/lib/calculation-service";
+import { computeDay, resolveOvertimeOptions } from "@/lib/calculation-service";
+import { ScheduleRepository, type WorkScheduleEntry } from "@/lib/repositories/schedule-repository";
 import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-repository";
 import { createClient } from "@/lib/supabase/client";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
@@ -36,11 +37,18 @@ const STATUS_LABEL_PT: Record<"complete" | "incomplete" | "inconsistent", string
 /** Dia do calendario com preview rapido (horas trabalhadas/status) ao passar o mouse. */
 function DayButtonWithPreview({
   recordsByDate,
+  schedules,
+  countEarlyArrivalAsOvertime,
   ...props
-}: React.ComponentProps<typeof DayButton> & { recordsByDate: Record<DateISO, WorkRecord> }) {
+}: React.ComponentProps<typeof DayButton> & {
+  recordsByDate: Record<DateISO, WorkRecord>;
+  schedules: WorkScheduleEntry[];
+  countEarlyArrivalAsOvertime?: boolean;
+}) {
   const dateIso = `${props.day.date.getFullYear()}-${(props.day.date.getMonth() + 1).toString().padStart(2, "0")}-${props.day.date.getDate().toString().padStart(2, "0")}`;
   const record = recordsByDate[dateIso];
   const status = statusOf(record);
+  const schedule = ScheduleRepository.pickEffective(schedules, dateIso);
 
   const calc = record
     ? computeDay(
@@ -52,7 +60,9 @@ function DayButtonWithPreview({
           exit_time: record.exit_time,
           day_type: record.day_type as DayType,
         },
-        null
+        schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
+        undefined,
+        resolveOvertimeOptions(record.count_early_arrival_as_overtime, countEarlyArrivalAsOvertime)
       )
     : null;
 
@@ -86,21 +96,27 @@ function statusOf(record: WorkRecord | undefined): "complete" | "incomplete" | "
 }
 
 export default function CalendarPage() {
-  const { user } = useAuth();
+  const { user, settings } = useAuth();
   const today = todayIso();
   const [selectedDate, setSelectedDate] = useState<DateISO>(today);
   const [monthCursor, setMonthCursor] = useState(toLocalDate(today));
   const [records, setRecords] = useState<Record<DateISO, WorkRecord>>({});
+  const [schedules, setSchedules] = useState<WorkScheduleEntry[]>([]);
 
   const loadMonth = useCallback(async () => {
     if (!user) return;
     const [start, end] = monthRange(monthCursor.getFullYear(), monthCursor.getMonth() + 1);
     const supabase = createClient();
     const workRepository = new WorkRepository(supabase);
-    const list = await workRepository.listByRange(user.id, start, end, false);
+    const scheduleRepository = new ScheduleRepository(supabase);
+    const [list, scheduleList] = await Promise.all([
+      workRepository.listByRange(user.id, start, end, false),
+      scheduleRepository.listHistory(user.id),
+    ]);
     const map: Record<DateISO, WorkRecord> = {};
     for (const r of list) map[r.work_date] = r;
     setRecords(map);
+    setSchedules(scheduleList);
   }, [user, monthCursor]);
 
   useEffect(() => {
@@ -117,9 +133,14 @@ export default function CalendarPage() {
 
   const dayButton = useCallback(
     (props: React.ComponentProps<typeof CalendarDayButton>) => (
-      <DayButtonWithPreview recordsByDate={records} {...props} />
+      <DayButtonWithPreview
+        recordsByDate={records}
+        schedules={schedules}
+        countEarlyArrivalAsOvertime={settings?.count_early_arrival_as_overtime}
+        {...props}
+      />
     ),
-    [records]
+    [records, schedules, settings?.count_early_arrival_as_overtime]
   );
 
   return (

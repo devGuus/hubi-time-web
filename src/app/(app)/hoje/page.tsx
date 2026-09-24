@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, Clock, Scale } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
-import { computeDay } from "@/lib/calculation-service";
+import { balanceDisplay } from "@/lib/balance-display";
+import { computeDay, resolveOvertimeOptions } from "@/lib/calculation-service";
 import { DayType } from "@/lib/constants";
 import { formatDateBR, todayIso, weekdayLabel } from "@/lib/dates";
 import { formatMinutesAsHours } from "@/lib/formatting";
@@ -18,7 +19,7 @@ import { ScreenIntro } from "@/components/shared/screen-intro";
 import { StatCard } from "@/components/shared/stat-card";
 
 export default function TodayPage() {
-  const { user } = useAuth();
+  const { user, settings } = useAuth();
   const [now, setNow] = useState(new Date());
   const [schedule, setSchedule] = useState<WorkScheduleEntry | null>(null);
   const [record, setRecord] = useState<WorkRecord | null>(null);
@@ -47,10 +48,13 @@ export default function TodayPage() {
           exit_time: record.exit_time,
           day_type: record.day_type as DayType,
         },
-        schedule ? { weekly_hours: schedule.weeklyHours } : null,
-        now
+        schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
+        now,
+        resolveOvertimeOptions(record.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
       )
     : null;
+
+  const saldo = calc ? balanceDisplay(calc.balanceMinutes) : null;
 
   const status = !calc
     ? "--"
@@ -87,9 +91,9 @@ export default function TodayPage() {
         />
         <StatCard
           label="Saldo estimado do dia"
-          value={calc ? formatMinutesAsHours(calc.balanceMinutes, true) : "00h00"}
-          icon={Scale}
-          accentClassName={calc && calc.balanceMinutes < 0 ? "text-destructive" : "text-success"}
+          value={saldo?.text ?? "00h00"}
+          icon={saldo?.icon ?? Scale}
+          accentClassName={saldo?.accentClassName}
         />
         <StatCard label="Situacao do registro" value={status} icon={CheckCircle2} />
       </div>

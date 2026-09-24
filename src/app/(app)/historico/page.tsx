@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Archive, ListFilter, MoreHorizontal, Pencil } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
-import { computeDay } from "@/lib/calculation-service";
+import { computeDay, resolveOvertimeOptions } from "@/lib/calculation-service";
 import { DayType } from "@/lib/constants";
 import { formatDateBR, iterDates, todayIso, type DateISO } from "@/lib/dates";
 import { formatMinutesAsHours, formatTimeOrPlaceholder } from "@/lib/formatting";
@@ -36,7 +36,7 @@ import { PeriodFilter, rangeForOption, type PeriodOption } from "@/components/sh
 import { ScreenIntro } from "@/components/shared/screen-intro";
 
 export default function HistoryPage() {
-  const { user } = useAuth();
+  const { user, settings } = useAuth();
   const today = todayIso();
 
   const [filter, setFilter] = useState<{ option: PeriodOption; customStart: DateISO; customEnd: DateISO }>({
@@ -157,7 +157,9 @@ export default function HistoryPage() {
                       exit_time: record?.exit_time ?? null,
                       day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
                     },
-                    schedule ? { weekly_hours: schedule.weeklyHours } : null
+                    schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
+                    undefined,
+                    resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
                   );
                   return (
                     <TableRow

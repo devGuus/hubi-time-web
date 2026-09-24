@@ -210,3 +210,47 @@ describe("horas extras e salario", () => {
     expect(averageTime([])).toBeNull();
   });
 });
+
+// Funcionalidade exclusiva da versao web (sem equivalente no desktop ainda):
+// chegada antes do horario de entrada padrao nao conta como hora extra, a
+// nao ser que o usuario marque explicitamente que aquele dia foi excecao.
+describe("computeDay - chegada antecipada", () => {
+  const scheduleWithEntry: ScheduleFields = {
+    weekly_hours: DEFAULT_WEEKLY_HOURS,
+    standard_entry_time: "08:00",
+  };
+
+  const fullDay = {
+    entry_time: "07:40",
+    lunch_start: "12:00",
+    lunch_end: "13:00",
+    exit_time: "17:00",
+  };
+
+  it("por padrao, chegar antes do horario nao conta como hora extra", () => {
+    const record = makeRecord(fullDay);
+    const day = computeDay(record, scheduleWithEntry);
+    // 08:00-12:00 + 13:00-17:00 = 8h, igual ao esperado - sem hora extra.
+    expect(day.workedMinutes).toBe(8 * 60);
+    expect(day.balanceMinutes).toBe(0);
+  });
+
+  it("chegar depois do horario padrao nao e afetado pelo recorte", () => {
+    const record = makeRecord({ ...fullDay, entry_time: "08:10" });
+    const day = computeDay(record, scheduleWithEntry);
+    expect(day.workedMinutes).toBe(8 * 60 - 10);
+  });
+
+  it("com a excecao do dia marcada, a chegada antecipada conta como hora extra", () => {
+    const record = makeRecord(fullDay);
+    const day = computeDay(record, scheduleWithEntry, undefined, { countEarlyArrivalAsOvertime: true });
+    expect(day.workedMinutes).toBe(8 * 60 + 20);
+    expect(day.balanceMinutes).toBe(20);
+  });
+
+  it("sem horario de entrada configurado, comportamento antigo se mantem (chegada antecipada conta)", () => {
+    const record = makeRecord(fullDay);
+    const day = computeDay(record, { weekly_hours: DEFAULT_WEEKLY_HOURS });
+    expect(day.workedMinutes).toBe(8 * 60 + 20);
+  });
+});

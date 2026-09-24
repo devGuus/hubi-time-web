@@ -12,10 +12,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertCircle, BarChart3, CalendarCheck, Clock, Flame, Gauge, PiggyBank, Timer } from "lucide-react";
+import { AlertCircle, BarChart3, CalendarCheck, Clock, Flame, Gauge, Timer } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
-import { summarizePeriod, computeDay, type DayCalculation } from "@/lib/calculation-service";
+import { balanceDisplay } from "@/lib/balance-display";
+import { summarizePeriod, computeDay, resolveOvertimeOptions, type DayCalculation } from "@/lib/calculation-service";
 import { DayType } from "@/lib/constants";
 import { addMonthsIso, iterDates, monthLabel, monthRange, todayIso, weekRange, type DateISO } from "@/lib/dates";
 import { formatMinutesAsHours } from "@/lib/formatting";
@@ -29,7 +30,7 @@ import { ScreenIntro } from "@/components/shared/screen-intro";
 import { StatCard } from "@/components/shared/stat-card";
 
 export default function HoursControlPage() {
-  const { user } = useAuth();
+  const { user, settings } = useAuth();
   const [monthAnchor, setMonthAnchor] = useState<DateISO>(todayIso().slice(0, 8) + "01");
   const [records, setRecords] = useState<WorkRecord[]>([]);
   const [schedules, setSchedules] = useState<WorkScheduleEntry[]>([]);
@@ -67,12 +68,15 @@ export default function HoursControlPage() {
         exit_time: record?.exit_time ?? null,
         day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
       },
-      schedule ? { weekly_hours: schedule.weeklyHours } : null
+      schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
+      undefined,
+      resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
     );
   });
 
   const summary = summarizePeriod(days, start, end);
   const balanceMinutes = summary.workedMinutes - summary.expectedMinutes;
+  const saldo = balanceDisplay(balanceMinutes);
   const overtimeMinutes = days.reduce((t, d) => t + Math.max(d.balanceMinutes, 0), 0);
   const averageDaily = summary.workedDaysCount ? Math.floor(summary.workedMinutes / summary.workedDaysCount) : 0;
 
@@ -112,12 +116,7 @@ export default function HoursControlPage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard label="Horas previstas" value={formatMinutesAsHours(summary.expectedMinutes)} icon={Clock} />
         <StatCard label="Horas trabalhadas" value={formatMinutesAsHours(summary.workedMinutes)} icon={Timer} />
-        <StatCard
-          label="Saldo do mes"
-          value={formatMinutesAsHours(balanceMinutes, true)}
-          icon={Gauge}
-          accentClassName={balanceMinutes >= 0 ? "text-success" : "text-destructive"}
-        />
+        <StatCard label="Saldo do mes" value={saldo.text} icon={saldo.icon} accentClassName={saldo.accentClassName} />
         <StatCard label="Media diaria" value={formatMinutesAsHours(averageDaily)} icon={Gauge} />
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -126,9 +125,9 @@ export default function HoursControlPage() {
         <StatCard label="Horas extras" value={formatMinutesAsHours(overtimeMinutes)} icon={Flame} />
         <StatCard
           label="Banco de horas do mes"
-          value={formatMinutesAsHours(balanceMinutes, true)}
-          icon={PiggyBank}
-          accentClassName={balanceMinutes >= 0 ? "text-success" : "text-destructive"}
+          value={saldo.text}
+          icon={saldo.icon}
+          accentClassName={saldo.accentClassName}
         />
       </div>
 

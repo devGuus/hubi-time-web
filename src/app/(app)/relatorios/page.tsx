@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Check, FileDown, FileSpreadsheet, FileText, ListFilter, Loader2, type LucideIcon } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
-import { computeDay, overtimeValue, regularHoursValue, summarizePeriod } from "@/lib/calculation-service";
+import { computeDay, overtimeValue, regularHoursValue, resolveOvertimeOptions, summarizePeriod } from "@/lib/calculation-service";
 import { DayType, DAY_TYPE_LABELS_PT } from "@/lib/constants";
 import { formatDateBR, iterDates, weekdayLabel, type DateISO } from "@/lib/dates";
 import { formatMinutesAsHours, formatTimeOrPlaceholder } from "@/lib/formatting";
@@ -32,7 +32,7 @@ const FORMATS: { format: ExportFormat; label: string; description: string; icon:
 ];
 
 export default function ReportsPage() {
-  const { user } = useAuth();
+  const { user, settings } = useAuth();
   const [filter, setFilter] = useState<{ option: PeriodOption; customStart: DateISO; customEnd: DateISO }>({
     option: "month",
     customStart: "",
@@ -68,7 +68,9 @@ export default function ReportsPage() {
             exit_time: record?.exit_time ?? null,
             day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
           },
-          schedule ? { weekly_hours: schedule.weeklyHours } : null
+          schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
+          undefined,
+          resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
         );
       });
 

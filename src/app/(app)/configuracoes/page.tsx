@@ -2,14 +2,16 @@
 
 /**
  * Tela de Configuracoes: tema, notificacoes, carga horaria, salario e horas extras.
- * Vigencias de carga horaria e salario nunca sao sobrescritas: cada alteracao
- * cria uma nova linha com effective_from.
+ * Vigencias de carga horaria e salario nao sao sobrescritas ao criar uma nova
+ * (cada mudanca real gera uma nova linha com effective_from) - mas o usuario
+ * pode editar ou excluir uma vigencia especifica para corrigir um erro de
+ * cadastro (ex.: data errada, valor errado).
  */
 import { useCallback, useEffect, useState } from "react";
 import { Decimal } from "decimal.js";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
-import { Clock, SlidersHorizontal, Wallet } from "lucide-react";
+import { Clock, Pencil, SlidersHorizontal, Trash2, Wallet, X } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { DEFAULT_WEEKLY_HOURS, WEEKDAY_KEYS, WEEKDAY_LABELS_PT, type WeekdayKey } from "@/lib/constants";
@@ -23,11 +25,23 @@ import {
   type SalaryEntry,
 } from "@/lib/repositories/salary-repository";
 import { createClient } from "@/lib/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScreenIntro } from "@/components/shared/screen-intro";
 
@@ -37,6 +51,36 @@ const NOTIFICATION_LABELS: Record<string, string> = {
   time_inconsistency: "Avisar sobre horarios inconsistentes",
   incomplete_month: "Avisar sobre registros incompletos no mes",
 };
+
+/** Botao de excluir com confirmacao - reutilizado nas 3 listas de vigencia abaixo. */
+function ConfirmDeleteButton({ itemLabel, onConfirm }: { itemLabel: string; onConfirm: () => void }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger
+        render={
+          <Button variant="ghost" size="icon-sm" className="text-destructive" aria-label="Excluir">
+            <Trash2 className="size-4" />
+          </Button>
+        }
+      />
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir {itemLabel}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta acao nao pode ser desfeita. Os dias ja calculados com base nesta vigencia serao recalculados
+            com a vigencia anterior.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90" onClick={onConfirm}>
+            Excluir
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export default function SettingsPage() {
   const { user, settings, updateSettings } = useAuth();
@@ -50,7 +94,7 @@ export default function SettingsPage() {
         description="Personalize sua jornada e preferencias."
         tips={[
           { icon: SlidersHorizontal, text: "Em 'Preferencias', ajuste tema e notificacoes." },
-          { icon: Clock, text: "Em 'Jornada', defina sua carga horaria - cada mudanca cria uma nova vigencia, sem apagar o historico." },
+          { icon: Clock, text: "Em 'Jornada', defina sua carga horaria e corrija vigencias erradas a qualquer momento." },
           { icon: Wallet, text: "Em 'Financeiro', configure seu salario e os percentuais de hora extra." },
         ]}
       />
@@ -104,7 +148,33 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="jornada" className="pt-4">
+        <TabsContent value="jornada" className="space-y-6 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Chegada antecipada</CardTitle>
+              <CardDescription>
+                Chegar antes do horario de entrada configurado abaixo nao vale como hora extra por padrao -
+                voce so &quot;chegou mais cedo&quot;. Desligue se quiser que qualquer chegada antecipada conte como
+                hora extra.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center gap-3">
+              <Switch
+                checked={settings?.count_early_arrival_as_overtime ?? false}
+                onCheckedChange={(checked) =>
+                  updateSettings({ count_early_arrival_as_overtime: checked }).catch(() =>
+                    toast.error("Erro ao salvar preferencia.")
+                  )
+                }
+              />
+              <span className="text-sm">
+                {settings?.count_early_arrival_as_overtime
+                  ? "Chegada antecipada sempre conta como hora extra"
+                  : "Chegada antecipada nao conta como hora extra (padrao)"}
+              </span>
+            </CardContent>
+          </Card>
+
           {user && <ScheduleCard userId={user.id} />}
         </TabsContent>
 
@@ -117,31 +187,63 @@ export default function SettingsPage() {
   );
 }
 
+function emptySchedule(): Record<WeekdayKey, number> {
+  return { ...DEFAULT_WEEKLY_HOURS };
+}
+
 function ScheduleCard({ userId }: { userId: string }) {
-  const [current, setCurrent] = useState<WorkScheduleEntry | null>(null);
-  const [hours, setHours] = useState<Record<WeekdayKey, number>>(DEFAULT_WEEKLY_HOURS);
+  const [entries, setEntries] = useState<WorkScheduleEntry[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [hours, setHours] = useState<Record<WeekdayKey, number>>(emptySchedule());
+  const [standardEntryTime, setStandardEntryTime] = useState("");
   const [effectiveFrom, setEffectiveFrom] = useState(todayIso());
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     const supabase = createClient();
     const repo = new ScheduleRepository(supabase);
-    setCurrent(await repo.getEffectiveAt(userId, todayIso()));
+    setEntries(await repo.listHistory(userId));
   }, [userId]);
 
   useEffect(() => {
-    // busca a vigencia atual ao montar - setState acontece apos o await
+    // busca o historico de vigencias ao montar - setState acontece apos o await
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+
+  function resetForm() {
+    setEditingId(null);
+    setHours(emptySchedule());
+    setStandardEntryTime("");
+    setEffectiveFrom(todayIso());
+  }
+
+  function startEdit(entry: WorkScheduleEntry) {
+    setEditingId(entry.id);
+    setHours({ ...entry.weeklyHours });
+    setStandardEntryTime(entry.standardEntryTime ?? "");
+    setEffectiveFrom(entry.effectiveFrom);
+  }
 
   async function handleSave() {
     setSaving(true);
     try {
       const supabase = createClient();
       const repo = new ScheduleRepository(supabase);
-      await repo.create(userId, effectiveFrom, hours);
-      toast.success("Nova vigencia de carga horaria salva.");
+      if (editingId) {
+        await repo.update(editingId, userId, {
+          effectiveFrom,
+          weeklyHours: hours,
+          monthlyHoursOverride: null,
+          notes: null,
+          standardEntryTime: standardEntryTime || null,
+        });
+        toast.success("Vigencia de carga horaria atualizada.");
+      } else {
+        await repo.create(userId, effectiveFrom, hours, null, null, standardEntryTime || null);
+        toast.success("Nova vigencia de carga horaria salva.");
+      }
+      resetForm();
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar.");
@@ -150,19 +252,56 @@ function ScheduleCard({ userId }: { userId: string }) {
     }
   }
 
+  async function handleDelete(id: string) {
+    try {
+      const supabase = createClient();
+      const repo = new ScheduleRepository(supabase);
+      await repo.delete(id, userId);
+      toast.success("Vigencia excluida.");
+      if (editingId === id) resetForm();
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao excluir.");
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Carga horaria</CardTitle>
+        <CardDescription>O horario de entrada padrao (opcional) e usado na regra de chegada antecipada acima.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          {current
-            ? `Vigente desde ${formatDateBR(current.effectiveFrom)} - ${WEEKDAY_KEYS.map(
-                (k) => `${WEEKDAY_LABELS_PT[k].slice(0, 3)}: ${current.weeklyHours[k]}h`
-              ).join(" | ")}`
-            : "Nenhuma carga horaria configurada ainda. Defina abaixo."}
-        </p>
+        {entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma carga horaria configurada ainda. Defina abaixo.</p>
+        ) : (
+          <ul className="space-y-2 text-sm">
+            {entries.map((entry) => (
+              <li key={entry.id} className="flex items-start justify-between gap-3 rounded-md border border-border p-2">
+                <span className="text-muted-foreground">
+                  Vigente desde {formatDateBR(entry.effectiveFrom)}
+                  {entry.standardEntryTime && ` - entrada padrao ${entry.standardEntryTime}`} -{" "}
+                  {WEEKDAY_KEYS.map((k) => `${WEEKDAY_LABELS_PT[k].slice(0, 3)}: ${entry.weeklyHours[k]}h`).join(" | ")}
+                </span>
+                <div className="flex shrink-0 gap-1">
+                  <Button variant="ghost" size="icon-sm" aria-label="Editar" onClick={() => startEdit(entry)}>
+                    <Pencil className="size-4" />
+                  </Button>
+                  <ConfirmDeleteButton itemLabel="esta vigencia de carga horaria" onConfirm={() => handleDelete(entry.id)} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {editingId && (
+          <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm">
+            <span className="flex-1">Editando vigencia de {formatDateBR(effectiveFrom)}.</span>
+            <Button variant="ghost" size="sm" onClick={resetForm}>
+              <X className="mr-1 size-3.5" /> Cancelar edicao
+            </Button>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-3">
           {WEEKDAY_KEYS.map((key) => (
@@ -180,13 +319,22 @@ function ScheduleCard({ userId }: { userId: string }) {
           ))}
         </div>
 
-        <div className="flex items-end gap-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Horario de entrada padrao</Label>
+            <Input
+              type="time"
+              className="w-32"
+              value={standardEntryTime}
+              onChange={(e) => setStandardEntryTime(e.target.value)}
+            />
+          </div>
           <div className="space-y-1">
             <Label className="text-xs">Vigente a partir de</Label>
             <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
           </div>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar nova vigencia"}
+            {saving ? "Salvando..." : editingId ? "Salvar alteracoes" : "Salvar nova vigencia"}
           </Button>
         </div>
       </CardContent>
@@ -195,7 +343,8 @@ function ScheduleCard({ userId }: { userId: string }) {
 }
 
 function SalaryCard({ userId }: { userId: string }) {
-  const [current, setCurrent] = useState<SalaryEntry | null>(null);
+  const [entries, setEntries] = useState<SalaryEntry[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [salaryText, setSalaryText] = useState("");
   const [monthlyHours, setMonthlyHours] = useState(220);
   const [effectiveFrom, setEffectiveFrom] = useState(todayIso());
@@ -204,14 +353,28 @@ function SalaryCard({ userId }: { userId: string }) {
   const load = useCallback(async () => {
     const supabase = createClient();
     const repo = new SalaryRepository(supabase);
-    setCurrent(await repo.getEffectiveAt(userId, todayIso()));
+    setEntries(await repo.listHistory(userId));
   }, [userId]);
 
   useEffect(() => {
-    // busca a vigencia atual ao montar - setState acontece apos o await
+    // busca o historico salarial ao montar - setState acontece apos o await
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+
+  function resetForm() {
+    setEditingId(null);
+    setSalaryText("");
+    setMonthlyHours(220);
+    setEffectiveFrom(todayIso());
+  }
+
+  function startEdit(entry: SalaryEntry) {
+    setEditingId(entry.id);
+    setSalaryText(entry.salary.toString());
+    setMonthlyHours(entry.monthlyHours.toNumber());
+    setEffectiveFrom(entry.effectiveFrom);
+  }
 
   async function handleSave() {
     let salary: Decimal;
@@ -229,14 +392,32 @@ function SalaryCard({ userId }: { userId: string }) {
     try {
       const supabase = createClient();
       const repo = new SalaryRepository(supabase);
-      await repo.create(userId, effectiveFrom, salary, new Decimal(monthlyHours));
-      toast.success("Nova vigencia salarial salva.");
-      setSalaryText("");
+      if (editingId) {
+        await repo.update(editingId, userId, { effectiveFrom, salary, monthlyHours: new Decimal(monthlyHours) });
+        toast.success("Vigencia salarial atualizada.");
+      } else {
+        await repo.create(userId, effectiveFrom, salary, new Decimal(monthlyHours));
+        toast.success("Nova vigencia salarial salva.");
+      }
+      resetForm();
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      const supabase = createClient();
+      const repo = new SalaryRepository(supabase);
+      await repo.delete(id, userId);
+      toast.success("Vigencia excluida.");
+      if (editingId === id) resetForm();
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao excluir.");
     }
   }
 
@@ -246,11 +427,35 @@ function SalaryCard({ userId }: { userId: string }) {
         <CardTitle className="text-base">Salario</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          {current
-            ? `Vigente desde ${formatDateBR(current.effectiveFrom)} - ${formatBRL(current.salary)} / ${current.monthlyHours}h - hora estimada: ${formatBRL(hourlyRateOf(current))}`
-            : "Nenhum salario configurado ainda. Defina abaixo."}
-        </p>
+        {entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum salario configurado ainda. Defina abaixo.</p>
+        ) : (
+          <ul className="space-y-2 text-sm">
+            {entries.map((entry) => (
+              <li key={entry.id} className="flex items-start justify-between gap-3 rounded-md border border-border p-2">
+                <span className="text-muted-foreground">
+                  Vigente desde {formatDateBR(entry.effectiveFrom)} - {formatBRL(entry.salary)} /{" "}
+                  {entry.monthlyHours.toString()}h - hora estimada: {formatBRL(hourlyRateOf(entry))}
+                </span>
+                <div className="flex shrink-0 gap-1">
+                  <Button variant="ghost" size="icon-sm" aria-label="Editar" onClick={() => startEdit(entry)}>
+                    <Pencil className="size-4" />
+                  </Button>
+                  <ConfirmDeleteButton itemLabel="esta vigencia salarial" onConfirm={() => handleDelete(entry.id)} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {editingId && (
+          <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm">
+            <span className="flex-1">Editando vigencia de {formatDateBR(effectiveFrom)}.</span>
+            <Button variant="ghost" size="sm" onClick={resetForm}>
+              <X className="mr-1 size-3.5" /> Cancelar edicao
+            </Button>
+          </div>
+        )}
 
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-1">
@@ -271,7 +476,7 @@ function SalaryCard({ userId }: { userId: string }) {
             <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
           </div>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar nova vigencia"}
+            {saving ? "Salvando..." : editingId ? "Salvar alteracoes" : "Salvar nova vigencia"}
           </Button>
         </div>
       </CardContent>
@@ -281,6 +486,7 @@ function SalaryCard({ userId }: { userId: string }) {
 
 function OvertimeRulesCard({ userId }: { userId: string }) {
   const [rules, setRules] = useState<OvertimeRule[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [percentage, setPercentage] = useState(50);
   const [effectiveFrom, setEffectiveFrom] = useState(todayIso());
@@ -293,10 +499,24 @@ function OvertimeRulesCard({ userId }: { userId: string }) {
   }, [userId]);
 
   useEffect(() => {
-    // busca a vigencia atual ao montar - setState acontece apos o await
+    // busca as regras ao montar - setState acontece apos o await
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+
+  function resetForm() {
+    setEditingId(null);
+    setName("");
+    setPercentage(50);
+    setEffectiveFrom(todayIso());
+  }
+
+  function startEdit(rule: OvertimeRule) {
+    setEditingId(rule.id);
+    setName(rule.name);
+    setPercentage(rule.percentage.toNumber());
+    setEffectiveFrom(rule.effectiveFrom);
+  }
 
   async function handleSave() {
     if (!name.trim()) {
@@ -307,14 +527,32 @@ function OvertimeRulesCard({ userId }: { userId: string }) {
     try {
       const supabase = createClient();
       const repo = new SalaryRepository(supabase);
-      await repo.createOvertimeRule(userId, name, new Decimal(percentage), effectiveFrom);
-      toast.success("Regra de hora extra adicionada.");
-      setName("");
+      if (editingId) {
+        await repo.updateOvertimeRule(editingId, userId, { name, percentage: new Decimal(percentage), effectiveFrom });
+        toast.success("Regra de hora extra atualizada.");
+      } else {
+        await repo.createOvertimeRule(userId, name, new Decimal(percentage), effectiveFrom);
+        toast.success("Regra de hora extra adicionada.");
+      }
+      resetForm();
       await load();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      const supabase = createClient();
+      const repo = new SalaryRepository(supabase);
+      await repo.deleteOvertimeRule(id, userId);
+      toast.success("Regra excluida.");
+      if (editingId === id) resetForm();
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao excluir.");
     }
   }
 
@@ -327,13 +565,30 @@ function OvertimeRulesCard({ userId }: { userId: string }) {
         {rules.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhuma regra cadastrada.</p>
         ) : (
-          <ul className="space-y-1 text-sm">
+          <ul className="space-y-2 text-sm">
             {rules.map((rule) => (
-              <li key={rule.id}>
-                {rule.name} - {rule.percentage.toString()}% - vigente desde {formatDateBR(rule.effectiveFrom)}
+              <li key={rule.id} className="flex items-start justify-between gap-3 rounded-md border border-border p-2">
+                <span className="text-muted-foreground">
+                  {rule.name} - {rule.percentage.toString()}% - vigente desde {formatDateBR(rule.effectiveFrom)}
+                </span>
+                <div className="flex shrink-0 gap-1">
+                  <Button variant="ghost" size="icon-sm" aria-label="Editar" onClick={() => startEdit(rule)}>
+                    <Pencil className="size-4" />
+                  </Button>
+                  <ConfirmDeleteButton itemLabel="esta regra de hora extra" onConfirm={() => handleDelete(rule.id)} />
+                </div>
               </li>
             ))}
           </ul>
+        )}
+
+        {editingId && (
+          <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm">
+            <span className="flex-1">Editando regra &quot;{name}&quot;.</span>
+            <Button variant="ghost" size="sm" onClick={resetForm}>
+              <X className="mr-1 size-3.5" /> Cancelar edicao
+            </Button>
+          </div>
         )}
 
         <div className="flex flex-wrap items-end gap-3">
@@ -350,7 +605,7 @@ function OvertimeRulesCard({ userId }: { userId: string }) {
             <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
           </div>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : "Adicionar regra"}
+            {saving ? "Salvando..." : editingId ? "Salvar alteracoes" : "Adicionar regra"}
           </Button>
         </div>
       </CardContent>

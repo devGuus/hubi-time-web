@@ -178,6 +178,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          count_early_arrival_as_overtime: boolean
           created_at: string
           id: string
           keep_signed_in: boolean
@@ -188,6 +189,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          count_early_arrival_as_overtime?: boolean
           created_at?: string
           id?: string
           keep_signed_in?: boolean
@@ -198,6 +200,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          count_early_arrival_as_overtime?: boolean
           created_at?: string
           id?: string
           keep_signed_in?: boolean
@@ -257,6 +260,7 @@ export type Database = {
         Row: {
           archived_at: string | null
           archived_by: string | null
+          count_early_arrival_as_overtime: boolean | null
           created_at: string
           day_type: string
           entry_time: string | null
@@ -274,6 +278,7 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           archived_by?: string | null
+          count_early_arrival_as_overtime?: boolean | null
           created_at?: string
           day_type?: string
           entry_time?: string | null
@@ -291,6 +296,7 @@ export type Database = {
         Update: {
           archived_at?: string | null
           archived_by?: string | null
+          count_early_arrival_as_overtime?: boolean | null
           created_at?: string
           day_type?: string
           entry_time?: string | null
@@ -314,6 +320,7 @@ export type Database = {
           id: string
           monthly_hours_override: number | null
           notes: string | null
+          standard_entry_time: string | null
           user_id: string
           weekly_hours: Json
         }
@@ -323,6 +330,7 @@ export type Database = {
           id?: string
           monthly_hours_override?: number | null
           notes?: string | null
+          standard_entry_time?: string | null
           user_id: string
           weekly_hours?: Json
         }
@@ -332,6 +340,7 @@ export type Database = {
           id?: string
           monthly_hours_override?: number | null
           notes?: string | null
+          standard_entry_time?: string | null
           user_id?: string
           weekly_hours?: Json
         }

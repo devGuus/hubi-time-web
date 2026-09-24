@@ -11,6 +11,7 @@ import {
   Home,
   PiggyBank,
   Settings,
+  Upload,
   User,
   Wallet,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { href: "/banco-horas", label: "Banco de Horas", icon: PiggyBank },
   { href: "/financeiro", label: "Financeiro", icon: Wallet },
   { href: "/relatorios", label: "Relatorios", icon: FileText },
+  { href: "/importar", label: "Importar", icon: Upload },
   { href: "/configuracoes", label: "Configuracoes", icon: Settings },
   { href: "/perfil", label: "Perfil", icon: User },
 ] as const;

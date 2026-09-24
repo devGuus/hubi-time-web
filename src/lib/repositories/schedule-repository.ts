@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_WEEKLY_HOURS, type WeekdayKey } from "@/lib/constants";
 import type { DateISO } from "@/lib/dates";
 import type { Database } from "@/types/database";
-import { translatePostgrestError } from "./errors";
+import { NotFoundError, translatePostgrestError } from "./errors";
 
 type ScheduleRow = Database["public"]["Tables"]["work_schedule_history"]["Row"];
 
@@ -15,6 +15,8 @@ export interface WorkScheduleEntry {
   weeklyHours: Record<WeekdayKey, number>;
   monthlyHoursOverride: number | null;
   notes: string | null;
+  /** Horario de entrada padrao (HH:MM) - usado para decidir se chegar antes conta como hora extra. */
+  standardEntryTime: string | null;
 }
 
 function toEntry(row: ScheduleRow): WorkScheduleEntry {
@@ -25,6 +27,7 @@ function toEntry(row: ScheduleRow): WorkScheduleEntry {
     weeklyHours: { ...DEFAULT_WEEKLY_HOURS, ...(row.weekly_hours as Record<WeekdayKey, number>) },
     monthlyHoursOverride: row.monthly_hours_override,
     notes: row.notes,
+    standardEntryTime: row.standard_entry_time?.slice(0, 5) ?? null,
   };
 }
 
@@ -59,7 +62,8 @@ export class ScheduleRepository {
     effectiveFrom: DateISO,
     weeklyHours: Record<WeekdayKey, number>,
     monthlyHoursOverride: number | null = null,
-    notes: string | null = null
+    notes: string | null = null,
+    standardEntryTime: string | null = null
   ): Promise<WorkScheduleEntry> {
     const { data, error } = await this.client
       .from("work_schedule_history")
@@ -69,11 +73,50 @@ export class ScheduleRepository {
         weekly_hours: weeklyHours,
         monthly_hours_override: monthlyHoursOverride,
         notes,
+        standard_entry_time: standardEntryTime,
       })
       .select("*")
       .single();
     if (error) throw translatePostgrestError(error, "criar vigencia de carga horaria");
     return toEntry(data);
+  }
+
+  async update(
+    id: string,
+    userId: string,
+    fields: {
+      effectiveFrom: DateISO;
+      weeklyHours: Record<WeekdayKey, number>;
+      monthlyHoursOverride: number | null;
+      notes: string | null;
+      standardEntryTime: string | null;
+    }
+  ): Promise<WorkScheduleEntry> {
+    const { data, error } = await this.client
+      .from("work_schedule_history")
+      .update({
+        effective_from: fields.effectiveFrom,
+        weekly_hours: fields.weeklyHours,
+        monthly_hours_override: fields.monthlyHoursOverride,
+        notes: fields.notes,
+        standard_entry_time: fields.standardEntryTime,
+      })
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("*")
+      .maybeSingle();
+    if (error) throw translatePostgrestError(error, "atualizar vigencia de carga horaria");
+    if (!data) throw new NotFoundError("Vigencia de carga horaria nao encontrada.");
+    return toEntry(data);
+  }
+
+  async delete(id: string, userId: string): Promise<void> {
+    const { error } = await this.client
+      .from("work_schedule_history")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+    if (error) throw translatePostgrestError(error, "excluir vigencia de carga horaria");
   }
 
   /** Seleciona, em uma lista ja carregada, a vigencia valida para `atDate`. */
