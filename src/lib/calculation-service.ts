@@ -245,7 +245,30 @@ export function averageTime(times: (string | null | undefined)[]): string | null
   return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
 }
 
-/** Estimativa de valor de horas extras. Sem regra configurada, usa 1x. */
+/** Acrescimo legal minimo de hora extra no Brasil (CLT): 50% em dias uteis,
+ * 100% aos domingos e feriados - se aplica mesmo sem nenhuma regra cadastrada. */
+const LEGAL_MINIMUM_OVERTIME_PERCENTAGE_WEEKDAY = 50;
+const LEGAL_MINIMUM_OVERTIME_PERCENTAGE_SUNDAY_OR_HOLIDAY = 100;
+
+/** Regra de hora extra efetiva para um dia: nunca abaixo do piso legal (50%
+ * em dia normal, 100% aos domingos/feriados), mesmo sem regra cadastrada ou
+ * com uma regra cadastrada abaixo do minimo. Uma regra cadastrada so se
+ * aplica quando e mais vantajosa que o piso legal daquele dia. */
+export function effectiveOvertimeRule(
+  day: Pick<DayCalculation, "workDate" | "dayType">,
+  customRule: OvertimeRuleFields | null
+): OvertimeRuleFields {
+  const isSundayOrHoliday =
+    day.dayType === DayType.FERIADO || JS_WEEKDAY_TO_KEY[toLocalDate(day.workDate).getDay()] === "domingo";
+  const legalMinimum = new Decimal(
+    isSundayOrHoliday ? LEGAL_MINIMUM_OVERTIME_PERCENTAGE_SUNDAY_OR_HOLIDAY : LEGAL_MINIMUM_OVERTIME_PERCENTAGE_WEEKDAY
+  );
+  if (!customRule) return { percentage: legalMinimum };
+  return { percentage: Decimal.max(customRule.percentage, legalMinimum) };
+}
+
+/** Estimativa de valor de horas extras, para um percentual ja resolvido
+ * (veja `effectiveOvertimeRule` para aplicar o piso legal por dia). */
 export function overtimeValue(
   overtimeMinutes: number,
   hourlyRate: Decimal,
@@ -255,6 +278,24 @@ export function overtimeValue(
   const multiplier = rule ? new Decimal(1).plus(rule.percentage.dividedBy(100)) : new Decimal(1);
   const hours = new Decimal(overtimeMinutes).dividedBy(60);
   return hours.times(hourlyRate).times(multiplier).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+}
+
+/** Soma o valor de hora extra de varios dias, aplicando o piso legal
+ * (50%/100%) de cada dia individualmente - use esta funcao para um periodo,
+ * em vez de somar os minutos primeiro e aplicar um unico percentual. */
+export function overtimeValueForPeriod(
+  days: DayCalculation[],
+  hourlyRate: Decimal,
+  customRule: OvertimeRuleFields | null
+): Decimal {
+  return days
+    .reduce((total, day) => {
+      const minutes = overtimeMinutesOf(day);
+      if (minutes <= 0) return total;
+      const rule = effectiveOvertimeRule(day, customRule);
+      return total.plus(overtimeValue(minutes, hourlyRate, rule));
+    }, new Decimal(0))
+    .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
 }
 
 export function regularHoursValue(

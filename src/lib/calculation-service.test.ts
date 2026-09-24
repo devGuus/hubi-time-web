@@ -11,11 +11,14 @@ import {
   computeDay,
   computeElapsedMinutesUntilNow,
   computeWorkedMinutes,
+  effectiveOvertimeRule,
   expectedMinutesForDay,
   overtimeValue,
+  overtimeValueForPeriod,
   regularHoursValue,
   runningBalance,
   summarizePeriod,
+  type DayCalculation,
   type ScheduleFields,
   type WorkRecordFields,
 } from "./calculation-service";
@@ -252,5 +255,73 @@ describe("computeDay - chegada antecipada", () => {
     const record = makeRecord(fullDay);
     const day = computeDay(record, { weekly_hours: DEFAULT_WEEKLY_HOURS });
     expect(day.workedMinutes).toBe(8 * 60 + 20);
+  });
+});
+
+// Funcionalidade exclusiva da versao web: piso legal de hora extra (CLT) -
+// minimo 50% em dia normal, 100% aos domingos/feriados, mesmo sem nenhuma
+// regra cadastrada pelo usuario.
+describe("effectiveOvertimeRule - piso legal de hora extra", () => {
+  const monday = { workDate: "2026-09-14", dayType: DayType.NORMAL }; // segunda-feira
+  const sunday = { workDate: "2026-09-13", dayType: DayType.NORMAL }; // domingo
+  const holiday = { workDate: "2026-09-14", dayType: DayType.FERIADO }; // feriado numa segunda
+
+  it("sem regra cadastrada, dia normal usa o piso legal de 50%", () => {
+    expect(effectiveOvertimeRule(monday, null).percentage.toString()).toBe("50");
+  });
+
+  it("sem regra cadastrada, domingo usa o piso legal de 100%", () => {
+    expect(effectiveOvertimeRule(sunday, null).percentage.toString()).toBe("100");
+  });
+
+  it("sem regra cadastrada, feriado usa o piso legal de 100% mesmo em dia de semana", () => {
+    expect(effectiveOvertimeRule(holiday, null).percentage.toString()).toBe("100");
+  });
+
+  it("regra cadastrada abaixo do piso legal e ignorada em favor do piso", () => {
+    const rule = { percentage: new Decimal(30) };
+    expect(effectiveOvertimeRule(monday, rule).percentage.toString()).toBe("50");
+  });
+
+  it("regra cadastrada acima do piso legal prevalece", () => {
+    const rule = { percentage: new Decimal(70) };
+    expect(effectiveOvertimeRule(monday, rule).percentage.toString()).toBe("70");
+  });
+
+  it("regra de 50% cadastrada nao reduz o piso de domingo para 50%", () => {
+    const rule = { percentage: new Decimal(50) };
+    expect(effectiveOvertimeRule(sunday, rule).percentage.toString()).toBe("100");
+  });
+});
+
+describe("overtimeValueForPeriod", () => {
+  function makeDay(overrides: Partial<DayCalculation>): DayCalculation {
+    return {
+      workDate: "2026-09-14",
+      dayType: DayType.NORMAL,
+      workedMinutes: 0,
+      expectedMinutes: 0,
+      balanceMinutes: 0,
+      morningMinutes: 0,
+      afternoonMinutes: 0,
+      breakMinutes: 0,
+      isComplete: true,
+      isInProgress: false,
+      ...overrides,
+    };
+  }
+
+  it("aplica 50% em hora extra de dia normal e 100% em hora extra de domingo, sem regra cadastrada", () => {
+    const weekdayOvertime = makeDay({ workDate: "2026-09-14", balanceMinutes: 60 }); // 1h extra, segunda
+    const sundayOvertime = makeDay({ workDate: "2026-09-13", balanceMinutes: 60 }); // 1h extra, domingo
+    const value = overtimeValueForPeriod([weekdayOvertime, sundayOvertime], new Decimal("10.00"), null);
+    // 1h x 10 x 1.5 (segunda) + 1h x 10 x 2.0 (domingo) = 15 + 20 = 35
+    expect(value.toString()).toBe("35");
+  });
+
+  it("dias sem saldo positivo nao entram na soma", () => {
+    const noOvertime = makeDay({ balanceMinutes: -30 });
+    const value = overtimeValueForPeriod([noOvertime], new Decimal("10.00"), null);
+    expect(value.toString()).toBe("0");
   });
 });

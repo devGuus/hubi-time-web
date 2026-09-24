@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Check, FileDown, FileSpreadsheet, FileText, ListFilter, Loader2, type LucideIcon } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
-import { computeDay, overtimeValue, regularHoursValue, resolveOvertimeOptions, summarizePeriod } from "@/lib/calculation-service";
+import { computeDay, overtimeValueForPeriod, regularHoursValue, resolveOvertimeOptions, summarizePeriod } from "@/lib/calculation-service";
 import { DayType, DAY_TYPE_LABELS_PT } from "@/lib/constants";
 import { formatDateBR, iterDates, weekdayLabel, type DateISO } from "@/lib/dates";
 import { formatMinutesAsHours, formatTimeOrPlaceholder } from "@/lib/formatting";
@@ -112,7 +112,7 @@ export default function ReportsPage() {
         const rule = SalaryRepository.pickEffectiveRule(overtimeRules, end);
         const summary = summarizePeriod(days, start, end);
         const overtimeMinutes = days.reduce((t, d) => t + Math.max(d.balanceMinutes, 0), 0);
-        const overtimeVal = overtimeValue(overtimeMinutes, hourlyRate, rule);
+        const overtimeVal = overtimeValueForPeriod(days, hourlyRate, rule);
         const regularVal = regularHoursValue(summary.workedMinutes, overtimeMinutes, hourlyRate);
 
         rows = [

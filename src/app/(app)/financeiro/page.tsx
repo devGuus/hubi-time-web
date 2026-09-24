@@ -14,7 +14,7 @@ import { balanceDisplay } from "@/lib/balance-display";
 import {
   computeDay,
   resolveOvertimeOptions,
-  overtimeValue,
+  overtimeValueForPeriod,
   regularHoursValue,
   summarizePeriod,
   type DayCalculation,
@@ -116,7 +116,7 @@ export default function FinancePage() {
   const applicableRule = SalaryRepository.pickEffectiveRule(overtimeRules, todayIso());
   const hourlyRate = currentSalary ? hourlyRateOf(currentSalary) : new Decimal(0);
   const overtimeMinutes = days.reduce((t, d) => t + Math.max(d.balanceMinutes, 0), 0);
-  const overtimeVal = overtimeValue(overtimeMinutes, hourlyRate, applicableRule);
+  const overtimeVal = overtimeValueForPeriod(days, hourlyRate, applicableRule);
   const regularVal = regularHoursValue(summary.workedMinutes, overtimeMinutes, hourlyRate);
   const totalVal = regularVal.plus(overtimeVal);
 
