@@ -2,6 +2,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Decimal } from "decimal.js";
 
+import type { WeekdayKey } from "@/lib/constants";
 import type { DateISO } from "@/lib/dates";
 import type { Database } from "@/types/database";
 import { NotFoundError, translatePostgrestError } from "./errors";
@@ -25,6 +26,15 @@ export interface OvertimeRule {
 export function hourlyRateOf(entry: SalaryEntry): Decimal {
   if (entry.monthlyHours.lessThanOrEqualTo(0)) return new Decimal(0);
   return entry.salary.dividedBy(entry.monthlyHours).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+}
+
+/** Divisor mensal padrao a partir do total de horas semanais da jornada -
+ * mesma tabela usada por escritorios de contabilidade (44h -> 220, 40h ->
+ * 200, 36h -> 180: sempre horas semanais x 5). Evita que o usuario digite a
+ * carga semanal por engano onde deveria ir o divisor mensal. */
+export function monthlyHoursDivisorFor(weeklyHours: Record<WeekdayKey, number>): number {
+  const totalWeekly = Object.values(weeklyHours).reduce((sum, h) => sum + h, 0);
+  return Math.round(totalWeekly * 5);
 }
 
 type SalaryRow = Database["public"]["Tables"]["salary_history"]["Row"];

@@ -20,6 +20,7 @@ import { formatBRL, parseBRL } from "@/lib/money";
 import { ScheduleRepository, type WorkScheduleEntry } from "@/lib/repositories/schedule-repository";
 import {
   hourlyRateOf,
+  monthlyHoursDivisorFor,
   SalaryRepository,
   type OvertimeRule,
   type SalaryEntry,
@@ -347,13 +348,21 @@ function SalaryCard({ userId }: { userId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [salaryText, setSalaryText] = useState("");
   const [monthlyHours, setMonthlyHours] = useState(220);
+  const [suggestedMonthlyHours, setSuggestedMonthlyHours] = useState<number | null>(null);
   const [effectiveFrom, setEffectiveFrom] = useState(todayIso());
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     const supabase = createClient();
     const repo = new SalaryRepository(supabase);
-    setEntries(await repo.listHistory(userId));
+    const scheduleRepo = new ScheduleRepository(supabase);
+    const [entryList, schedule] = await Promise.all([
+      repo.listHistory(userId),
+      scheduleRepo.getEffectiveAt(userId, todayIso()),
+    ]);
+    setEntries(entryList);
+    const suggestion = schedule ? monthlyHoursDivisorFor(schedule.weeklyHours) : null;
+    setSuggestedMonthlyHours(suggestion);
   }, [userId]);
 
   useEffect(() => {
@@ -362,10 +371,19 @@ function SalaryCard({ userId }: { userId: string }) {
     load();
   }, [load]);
 
+  useEffect(() => {
+    // aplica a sugestao assim que ela chega, contanto que o usuario nao
+    // esteja editando uma vigencia existente (que ja tem seu proprio valor)
+    if (!editingId && suggestedMonthlyHours) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMonthlyHours(suggestedMonthlyHours);
+    }
+  }, [suggestedMonthlyHours, editingId]);
+
   function resetForm() {
     setEditingId(null);
     setSalaryText("");
-    setMonthlyHours(220);
+    setMonthlyHours(suggestedMonthlyHours ?? 220);
     setEffectiveFrom(todayIso());
   }
 
@@ -463,13 +481,18 @@ function SalaryCard({ userId }: { userId: string }) {
             <Input placeholder="Ex.: 3500,00" value={salaryText} onChange={(e) => setSalaryText(e.target.value)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Carga mensal (horas)</Label>
+            <Label className="text-xs">Divisor mensal (horas)</Label>
             <Input
               type="number"
               min={1}
               value={monthlyHours}
               onChange={(e) => setMonthlyHours(Number(e.target.value))}
             />
+            <p className="max-w-56 text-xs text-muted-foreground">
+              {suggestedMonthlyHours
+                ? `Calculado pela sua jornada (${suggestedMonthlyHours / 5}h/semana). Nao e a soma de horas do mes - e o divisor legal (44h/sem = 220, 40h = 200, 36h = 180).`
+                : "Divisor legal, nao a soma de horas do mes (44h/sem = 220, 40h = 200, 36h = 180). Configure a jornada acima para calcular sozinho."}
+            </p>
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Vigente a partir de</Label>
