@@ -22,6 +22,7 @@ import { formatTimeOrPlaceholder } from "@/lib/formatting";
 import {
   downloadImportTemplateCsv,
   downloadImportTemplateXlsx,
+  IMPORT_HEADERS,
   parseImportFile,
   type ParsedImportRow,
 } from "@/lib/import-service";
@@ -183,7 +184,7 @@ export default function ImportPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-1.5">
-            {["Data", "Entrada", "Saida almoço", "Retorno", "Saida", "Tipo de dia", "observações"].map((h) => (
+            {IMPORT_HEADERS.map((h) => (
               <Badge key={h} variant="secondary">
                 {h}
               </Badge>
