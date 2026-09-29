@@ -244,7 +244,7 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
             onCheckedChange={(checked) => setEarlyArrivalIsOvertime(Boolean(checked))}
             disabled={!isEditable}
           />
-          Ative caso horas de chegada antecipada devam ser contadas como horas extras
+          Ative caso horas de chegada antecipada devam ser contadas como horas extras 
         </label>
 
         <div className="max-w-xs space-y-1.5">

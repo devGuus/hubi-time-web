@@ -91,24 +91,24 @@ export default function SettingsPage() {
     <div className="max-w-3xl space-y-6">
       <ScreenIntro
         screenKey="configuracoes"
-        title="Configurações"
+        title="Configuracoes"
         description="Personalize sua jornada e preferências."
         tips={[
-          { icon: SlidersHorizontal, text: "Em 'Preferências', ajuste tema e notificações." },
+          { icon: SlidersHorizontal, text: "Em 'preferências', ajuste tema e notificações." },
           { icon: Clock, text: "Em 'Jornada', defina sua carga horaria e corrija vigências erradas a qualquer momento." },
           { icon: Wallet, text: "Em 'Financeiro', configure seu salario e os percentuais de hora extra." },
         ]}
       />
-      <h1 className="text-2xl font-semibold">Configurações</h1>
+      <h1 className="text-2xl font-semibold">Configuracoes</h1>
 
-      <Tabs defaultValue="preferencias">
+      <Tabs defaultValue="preferências">
         <TabsList>
-          <TabsTrigger value="preferencias">Preferências</TabsTrigger>
+          <TabsTrigger value="preferências">preferências</TabsTrigger>
           <TabsTrigger value="jornada">Jornada</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="preferencias" className="space-y-6 pt-4">
+        <TabsContent value="preferências" className="space-y-6 pt-4">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Tema</CardTitle>
@@ -125,7 +125,7 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Notificações</CardTitle>
+              <CardTitle className="text-base">notificações</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {Object.entries(NOTIFICATION_LABELS).map(([key, label]) => {

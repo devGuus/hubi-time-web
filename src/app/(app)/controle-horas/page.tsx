@@ -127,16 +127,10 @@ export default function HoursControlPage() {
         <StatCard label="Saldo do mes" value={saldo.text} icon={saldo.icon} accentClassName={saldo.accentClassName} />
         <StatCard label="Media diaria" value={formatMinutesAsHours(averageDaily)} icon={Gauge} />
       </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <StatCard label="Dias trabalhados" value={String(summary.workedDaysCount)} icon={CalendarCheck} />
         <StatCard label="Dias incompletos" value={String(summary.incompleteDaysCount)} icon={AlertCircle} />
         <StatCard label="Horas extras" value={formatMinutesAsHours(overtimeMinutes)} icon={Flame} />
-        <StatCard
-          label="Banco de horas do mes"
-          value={saldo.text}
-          icon={saldo.icon}
-          accentClassName={saldo.accentClassName}
-        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

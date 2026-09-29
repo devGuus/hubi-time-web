@@ -78,7 +78,7 @@ export default function TodayPage() {
       />
       <div>
         <h1 className="text-2xl font-semibold">Hoje, {formatDateBR(today)}</h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground" suppressHydrationWarning>
           {weekdayLabel(today)} - {now.toLocaleTimeString("pt-BR")}
         </p>
       </div>
