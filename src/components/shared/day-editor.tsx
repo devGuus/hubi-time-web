@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Editor de um dia de jornada: os 4 horarios, tipo de dia, observacoes,
- * avisos de inconsistencia, salvar/arquivar/restaurar e aba de historico.
+ * Editor de um dia de jornada: os 4 horários, tipo de dia, observações,
+ * avisos de inconsistência, salvar/arquivar/restaurar e aba de historico.
  * Equivalente ao DayEditorWidget do desktop - usado em Hoje, Calendario e Historico.
  */
 import { useCallback, useEffect, useState } from "react";
@@ -42,11 +42,11 @@ import { TimeField } from "./time-field";
 
 const FIELD_LABELS_PT: Record<string, string> = {
   entry_time: "Entrada",
-  lunch_start: "Saida para almoco",
-  lunch_end: "Retorno do almoco",
+  lunch_start: "Saida para almoço",
+  lunch_end: "Retorno do almoço",
   exit_time: "Saida",
   day_type: "Tipo de dia",
-  notes: "Observacoes",
+  notes: "observações",
   status: "Status",
 };
 
@@ -109,8 +109,8 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
 
   useEffect(() => {
     // `load` busca o registro no Supabase; o setState acontece so apos o
-    // await (nao sincronamente), mas o `setLoading(true)` inicial dispara
-    // antes disso - padrao usual de busca de dados por efeito.
+    // await (não sincronamente), mas o `setLoading(true)` inicial dispara
+    // antes disso - padrão usual de busca de dados por efeito.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
@@ -203,7 +203,7 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
     <Tabs defaultValue="registro" onValueChange={(v) => v === "historico" && loadHistory()}>
       <TabsList>
         <TabsTrigger value="registro">Registro</TabsTrigger>
-        <TabsTrigger value="historico">Historico de alteracoes</TabsTrigger>
+        <TabsTrigger value="historico">Historico de alterações</TabsTrigger>
       </TabsList>
 
       <TabsContent value="registro" className="space-y-4 pt-4">
@@ -222,14 +222,14 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
         )}
         {isArchived && (
           <p className="text-sm italic text-muted-foreground">
-            Este registro esta arquivado e nao pode ser editado.
+            Este registro esta arquivado e não pode ser editado.
           </p>
         )}
 
         <div className="flex flex-wrap gap-6">
           <TimeField label="Entrada" value={entryTime} onChange={setEntryTime} disabled={!isEditable} />
           <TimeField
-            label="Saida para almoco"
+            label="Saida para almoço"
             value={lunchStart}
             onChange={setLunchStart}
             disabled={!isEditable}
@@ -264,11 +264,11 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Observacoes</Label>
+          <Label className="text-xs font-medium text-muted-foreground">observações</Label>
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Observacoes sobre o dia (opcional)"
+            placeholder="observações sobre o dia (opcional)"
             disabled={!isEditable}
             rows={3}
           />
@@ -315,7 +315,7 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
         ) : history === null ? (
           <Skeleton className="h-24 w-full" />
         ) : history.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma alteracao registrada ainda.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma alteração registrada ainda.</p>
         ) : (
           <ul className="space-y-2 text-sm">
             {history.map((entry) => (

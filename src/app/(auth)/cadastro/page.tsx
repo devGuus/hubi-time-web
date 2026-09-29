@@ -19,16 +19,16 @@ import { Label } from "@/components/ui/label";
 const schema = z
   .object({
     name: z.string().min(1, "Informe seu nome."),
-    email: z.string().email("Informe um e-mail valido."),
+    email: z.string().email("Informe um e-mail válido."),
     password: z
       .string()
-      .min(8, "A senha deve ter no minimo 8 caracteres.")
-      .regex(/[A-Z]/, "A senha deve conter ao menos uma letra maiuscula.")
-      .regex(/[0-9]/, "A senha deve conter ao menos um numero."),
+      .min(8, "A senha deve ter no mínimo 8 caracteres.")
+      .regex(/[A-Z]/, "A senha deve conter ao menos uma letra maiúscula.")
+      .regex(/[0-9]/, "A senha deve conter ao menos um número."),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "As senhas informadas nao coincidem.",
+    message: "As senhas informadas não coincidem.",
     path: ["confirmPassword"],
   });
 
@@ -57,7 +57,7 @@ export default function RegisterPage() {
           ? error.friendlyMessage
           : error instanceof Error
             ? error.message
-            : "Nao foi possivel criar a conta."
+            : "não foi possivel criar a conta."
       );
     }
   }
@@ -90,7 +90,7 @@ export default function RegisterPage() {
 
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
-            <Input id="password" type="password" placeholder="Minimo 8 caracteres" {...register("password")} />
+            <Input id="password" type="password" placeholder="mínimo 8 caracteres" {...register("password")} />
             {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
           </div>
 
@@ -108,7 +108,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm">
             <Link href="/login" className="text-primary hover:underline">
-              Ja tenho conta - Entrar
+              já tenho conta - Entrar
             </Link>
           </p>
         </form>

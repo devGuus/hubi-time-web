@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
   async function handleRequest() {
     setError(null);
     if (!isValidEmail(email)) {
-      setError("Informe um e-mail valido.");
+      setError("Informe um e-mail válido.");
       return;
     }
     setLoading(true);
@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
           ? err.friendlyMessage
           : err instanceof Error
             ? err.message
-            : "Nao foi possivel enviar o codigo."
+            : "não foi possivel enviar o código."
       );
     } finally {
       setLoading(false);
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
   async function handleConfirm() {
     setError(null);
     if (code.length !== OTP_CODE_LENGTH) {
-      setError(`Informe os ${OTP_CODE_LENGTH} digitos do codigo recebido.`);
+      setError(`Informe os ${OTP_CODE_LENGTH} digitos do código recebido.`);
       return;
     }
     const passwordResult = validatePassword(newPassword);
@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
       return;
     }
     if (!passwordsMatch(newPassword, confirmPassword)) {
-      setError("As senhas informadas nao coincidem.");
+      setError("As senhas informadas não coincidem.");
       return;
     }
     setLoading(true);
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
           ? err.friendlyMessage
           : err instanceof Error
             ? err.message
-            : "Nao foi possivel redefinir a senha."
+            : "não foi possivel redefinir a senha."
       );
     } finally {
       setLoading(false);
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Recuperar senha</CardTitle>
-          <CardDescription>Informe seu e-mail para receber um codigo de recuperacao.</CardDescription>
+          <CardDescription>Informe seu e-mail para receber um código de recuperacao.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
             />
           </div>
           <Button className="w-full" disabled={loading} onClick={handleRequest}>
-            {loading ? "Enviando..." : "Enviar codigo"}
+            {loading ? "Enviando..." : "Enviar código"}
           </Button>
           <p className="text-center text-sm">
             <Link href="/login" className="text-primary hover:underline">
@@ -121,8 +121,8 @@ export default function ForgotPasswordPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">Digite o codigo e a nova senha</CardTitle>
-        <CardDescription>Enviamos um codigo para {email}.</CardDescription>
+        <CardTitle className="text-2xl">Digite o código e a nova senha</CardTitle>
+        <CardDescription>Enviamos um código para {email}.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
         {error && (

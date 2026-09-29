@@ -1,7 +1,7 @@
 import type { TooltipContentProps, TooltipValueType } from "recharts";
 
-/** Tooltip customizado para os graficos recharts - o `<Tooltip />` padrao usa
- * estilo inline fixo (caixa branca) e nao respeita o tema escuro. */
+/** Tooltip customizado para os graficos recharts - o `<Tooltip />` padrão usa
+ * estilo inline fixo (caixa branca) e não respeita o tema escuro. */
 export function ChartTooltipContent({
   active,
   payload,

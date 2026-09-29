@@ -135,14 +135,14 @@ export default function FinancePage() {
         tips={[
           { icon: Wallet, text: "Configure seu salario e carga mensal em Configuracoes para ver os valores aqui." },
           { icon: Coins, text: "Veja estimativas de horas normais, extras e o total do periodo." },
-          { icon: AlertCircle, text: "Sao estimativas para controle pessoal - nao substituem sua folha de pagamento oficial." },
+          { icon: AlertCircle, text: "Sao estimativas para controle pessoal - não substituem sua folha de pagamento oficial." },
         ]}
       />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Financeiro</h1>
           <p className="text-sm italic text-muted-foreground">
-            Valores estimados para controle pessoal. Nao substituem sua folha de pagamento oficial.
+            Valores estimados para controle pessoal. não substituem sua folha de pagamento oficial.
           </p>
         </div>
         <Select value={period} onValueChange={(v) => setPeriod(v as PeriodOption)}>
@@ -161,7 +161,7 @@ export default function FinancePage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
           label="Salario mensal vigente"
-          value={currentSalary ? formatBRL(currentSalary.salary) : "Nao configurado"}
+          value={currentSalary ? formatBRL(currentSalary.salary) : "não configurado"}
           icon={Wallet}
         />
         <StatCard label="Valor estimado da hora" value={currentSalary ? formatBRL(hourlyRate) : "--"} icon={Coins} />
@@ -183,7 +183,7 @@ export default function FinancePage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Evolucao salarial</CardTitle>
+            <CardTitle className="text-base">evolução salarial</CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             <ResponsiveContainer width="100%" height="100%">

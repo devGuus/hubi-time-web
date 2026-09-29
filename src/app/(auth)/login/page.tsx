@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const schema = z.object({
-  email: z.string().email("Informe um e-mail valido."),
+  email: z.string().email("Informe um e-mail válido."),
   password: z.string().min(1, "Informe sua senha."),
 });
 
@@ -46,7 +46,7 @@ export default function LoginPage() {
           ? error.friendlyMessage
           : error instanceof Error
             ? error.message
-            : "Nao foi possivel entrar."
+            : "não foi possivel entrar."
       );
     }
   }

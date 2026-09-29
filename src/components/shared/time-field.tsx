@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Campo de horario com botao "Agora". Usa <input type="time"> nativo, que
- * ja suporta valor vazio (NULL) e formato HH:MM sem mascara customizada.
+ * Campo de horário com botao "Agora". Usa <input type="time"> nativo, que
+ * já suporta valor vazio (NULL) e formato HH:MM sem mascara customizada.
  */
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

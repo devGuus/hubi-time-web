@@ -62,7 +62,7 @@ export default function TodayPage() {
       ? "Completo"
       : calc.isInProgress
         ? "Em andamento"
-        : "Nao iniciado";
+        : "não iniciado";
 
   return (
     <div className="space-y-6">
@@ -71,9 +71,9 @@ export default function TodayPage() {
         title="Bem-vindo ao Hubi Time"
         description="Esta e a tela Hoje: sua visao rapida do dia atual."
         tips={[
-          { icon: Clock, text: "Acompanhe em tempo real quantas horas voce ja trabalhou hoje." },
-          { icon: Scale, text: "Veja o saldo estimado do dia assim que registrar seus horarios." },
-          { icon: CheckCircle2, text: "Registre entrada, almoco e saida direto aqui embaixo." },
+          { icon: Clock, text: "Acompanhe em tempo real quantas horas você já trabalhou hoje." },
+          { icon: Scale, text: "Veja o saldo estimado do dia assim que registrar seus horários." },
+          { icon: CheckCircle2, text: "Registre entrada, almoço e saida direto aqui embaixo." },
         ]}
       />
       <div>

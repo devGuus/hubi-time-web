@@ -31,7 +31,7 @@ export default function VerifyEmailPage() {
       router.replace("/cadastro");
       return;
     }
-    // sessionStorage so existe no cliente - nao ha como ler durante o render
+    // sessionStorage so existe no cliente - não ha como ler durante o render
     // inicial (SSR) para evitar este efeito.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setEmail(stored);
@@ -58,7 +58,7 @@ export default function VerifyEmailPage() {
           ? err.friendlyMessage
           : err instanceof Error
             ? err.message
-            : "Codigo invalido."
+            : "código inválido."
       );
     } finally {
       setVerifying(false);
@@ -76,7 +76,7 @@ export default function VerifyEmailPage() {
           ? err.friendlyMessage
           : err instanceof Error
             ? err.message
-            : "Nao foi possivel reenviar o codigo."
+            : "não foi possivel reenviar o código."
       );
     }
   }
@@ -87,7 +87,7 @@ export default function VerifyEmailPage() {
     <Card>
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Verifique seu e-mail</CardTitle>
-        <CardDescription>Enviamos um codigo de verificacao para {email}.</CardDescription>
+        <CardDescription>Enviamos um código de verificacao para {email}.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4">
         {error && (
@@ -119,7 +119,7 @@ export default function VerifyEmailPage() {
         </Button>
 
         <Button variant="link" onClick={handleResend} disabled={cooldown > 0}>
-          {cooldown > 0 ? `Reenviar codigo (${cooldown}s)` : "Reenviar codigo"}
+          {cooldown > 0 ? `Reenviar código (${cooldown}s)` : "Reenviar código"}
         </Button>
 
         <Link href="/login" className="text-sm text-primary hover:underline">

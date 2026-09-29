@@ -63,7 +63,7 @@ export function Topbar() {
           }
         />
         <SheetContent side="left" className="flex flex-col bg-sidebar p-4 text-sidebar-foreground">
-          <SheetTitle className="sr-only">Menu de navegacao</SheetTitle>
+          <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
           <SidebarNav onNavigate={() => setMobileNavOpen(false)} />
         </SheetContent>
       </Sheet>

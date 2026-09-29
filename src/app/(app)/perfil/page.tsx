@@ -1,6 +1,6 @@
 "use client";
 
-/** Tela 'Meu Perfil': dados pessoais, alteracao de senha e atalhos. */
+/** Tela 'Meu Perfil': dados pessoais, alteração de senha e atalhos. */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -82,7 +82,7 @@ export default function ProfilePage() {
       return;
     }
     if (!passwordsMatch(newPassword, confirmPassword)) {
-      toast.error("As senhas informadas nao coincidem.");
+      toast.error("As senhas informadas não coincidem.");
       return;
     }
     setSavingPassword(true);
@@ -176,13 +176,13 @@ export default function ProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Preferencias</CardTitle>
+          <CardTitle className="text-base">preferências</CardTitle>
         </CardHeader>
         <CardContent>
           <Button
             variant="ghost"
             render={
-              <Link href="/configuracoes">Configuracoes de jornada, salario, tema e notificacoes</Link>
+              <Link href="/configuracoes">Configuracoes de jornada, salario, tema e notificações</Link>
             }
           />
         </CardContent>

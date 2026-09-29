@@ -1,6 +1,6 @@
 "use client";
 
-/** Tela 'Banco de Horas': saldo diario/semanal/mensal/anual/acumulado e evolucao. */
+/** Tela 'Banco de Horas': saldo diario/semanal/mensal/anual/acumulado e evolução. */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PiggyBank, SlidersHorizontal, TrendingUp } from "lucide-react";
@@ -116,8 +116,8 @@ export default function BankOfHoursPage() {
         description="Seu saldo acumulado ao longo do tempo."
         tips={[
           { icon: PiggyBank, text: "Veja o saldo do dia, da semana, do mes, do ano e o total acumulado." },
-          { icon: TrendingUp, text: "O grafico mostra a evolucao do seu banco de horas no periodo escolhido." },
-          { icon: SlidersHorizontal, text: "Troque o periodo (mes, ano ou ultimos 12 meses) no seletor no topo." },
+          { icon: TrendingUp, text: "O grafico mostra a evolução do seu banco de horas no periodo escolhido." },
+          { icon: SlidersHorizontal, text: "Troque o periodo (mes, ano ou últimos 12 meses) no seletor no topo." },
         ]}
       />
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -129,7 +129,7 @@ export default function BankOfHoursPage() {
           <SelectContent>
             <SelectItem value="month">Mes atual</SelectItem>
             <SelectItem value="year">Ano atual</SelectItem>
-            <SelectItem value="last12months">Ultimos 12 meses</SelectItem>
+            <SelectItem value="last12months">últimos 12 meses</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -170,7 +170,7 @@ export default function BankOfHoursPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Evolucao do banco de horas</CardTitle>
+          <CardTitle className="text-base">evolução do banco de horas</CardTitle>
         </CardHeader>
         <CardContent className="h-80">
           <ResponsiveContainer width="100%" height="100%">

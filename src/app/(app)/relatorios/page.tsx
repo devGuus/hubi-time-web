@@ -1,6 +1,6 @@
 "use client";
 
-/** Tela de relatorios: exportacao de jornada e financeiro em Excel/CSV/PDF. */
+/** Tela de relatorios: exportação de jornada e financeiro em Excel/CSV/PDF. */
 import { useState } from "react";
 import { Decimal } from "decimal.js";
 import { toast } from "sonner";
@@ -87,7 +87,7 @@ export default function ReportsPage() {
             Data: formatDateBR(day.workDate),
             "Dia da semana": weekdayLabel(day.workDate),
             Entrada: formatTimeOrPlaceholder(record?.entry_time),
-            "Saida almoco": formatTimeOrPlaceholder(record?.lunch_start),
+            "Saida almoço": formatTimeOrPlaceholder(record?.lunch_start),
             Retorno: formatTimeOrPlaceholder(record?.lunch_end),
             Saida: formatTimeOrPlaceholder(record?.exit_time),
             "Horas trabalhadas": formatMinutesAsHours(day.workedMinutes),
@@ -95,7 +95,7 @@ export default function ReportsPage() {
             Saldo: formatMinutesAsHours(day.balanceMinutes, true),
             "Horas extras": formatMinutesAsHours(Math.max(day.balanceMinutes, 0)),
             "Tipo de dia": DAY_TYPE_LABELS_PT[day.dayType],
-            Observacoes: record?.notes ?? "",
+            observações: record?.notes ?? "",
             Status: day.isComplete ? "Completo" : "Incompleto",
           };
         });

@@ -20,18 +20,18 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/hoje", label: "Hoje", icon: Home },
-  { href: "/calendario", label: "Calendario", icon: Calendar },
-  { href: "/historico", label: "Historico", icon: History },
+  { href: "/calendario", label: "Calendário", icon: Calendar },
+  { href: "/historico", label: "Histórico", icon: History },
   { href: "/controle-horas", label: "Controle de Horas", icon: BarChart3 },
   { href: "/banco-horas", label: "Banco de Horas", icon: PiggyBank },
   { href: "/financeiro", label: "Financeiro", icon: Wallet },
-  { href: "/relatorios", label: "Relatorios", icon: FileText },
+  { href: "/relatorios", label: "Relatórios", icon: FileText },
   { href: "/importar", label: "Importar", icon: Upload },
-  { href: "/configuracoes", label: "Configuracoes", icon: Settings },
+  { href: "/configuracoes", label: "Configurações", icon: Settings },
   { href: "/perfil", label: "Perfil", icon: User },
 ] as const;
 
-/** Conteudo da navegacao, compartilhado entre a sidebar fixa (desktop) e a gaveta (mobile). */
+/** Conteudo da navegação, compartilhado entre a sidebar fixa (desktop) e a gaveta (mobile). */
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const activeIndex = NAV_ITEMS.findIndex(
@@ -93,7 +93,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-/** Sidebar fixa - visivel apenas em telas grandes (lg+). Em telas menores, a navegacao
+/** Sidebar fixa - visivel apenas em telas grandes (lg+). Em telas menores, a navegação
  * vira uma gaveta (Sheet) acionada pelo botao de menu no Topbar. */
 export function Sidebar() {
   return (

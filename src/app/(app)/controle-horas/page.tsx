@@ -53,7 +53,7 @@ export default function HoursControlPage() {
     })();
   }, [user, start, end]);
 
-  // Calculo de um mes de dias e barato - nao precisa de useMemo, e deixar o
+  // cálculo de um mes de dias e barato - não precisa de useMemo, e deixar o
   // React Compiler otimizar sozinho evita conflito com memoizacao manual.
   const byDate = new Map(records.map((r) => [r.work_date, r]));
   const days = iterDates(start, end).map((date) => {

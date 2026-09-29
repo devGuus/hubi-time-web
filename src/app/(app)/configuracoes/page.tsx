@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * Tela de Configuracoes: tema, notificacoes, carga horaria, salario e horas extras.
- * Vigencias de carga horaria e salario nao sao sobrescritas ao criar uma nova
+ * Tela de Configuracoes: tema, notificações, carga horaria, salario e horas extras.
+ * vigências de carga horaria e salario não sao sobrescritas ao criar uma nova
  * (cada mudanca real gera uma nova linha com effective_from) - mas o usuario
- * pode editar ou excluir uma vigencia especifica para corrigir um erro de
+ * pode editar ou excluir uma vigência especifica para corrigir um erro de
  * cadastro (ex.: data errada, valor errado).
  */
 import { useCallback, useEffect, useState } from "react";
@@ -47,13 +47,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScreenIntro } from "@/components/shared/screen-intro";
 
 const NOTIFICATION_LABELS: Record<string, string> = {
-  missing_lunch_return: "Avisar quando faltar registrar o retorno do almoco",
+  missing_lunch_return: "Avisar quando faltar registrar o retorno do almoço",
   incomplete_today: "Avisar quando o registro do dia estiver incompleto",
-  time_inconsistency: "Avisar sobre horarios inconsistentes",
+  time_inconsistency: "Avisar sobre horários inconsistentes",
   incomplete_month: "Avisar sobre registros incompletos no mes",
 };
 
-/** Botao de excluir com confirmacao - reutilizado nas 3 listas de vigencia abaixo. */
+/** Botao de excluir com confirmacao - reutilizado nas 3 listas de vigência abaixo. */
 function ConfirmDeleteButton({ itemLabel, onConfirm }: { itemLabel: string; onConfirm: () => void }) {
   return (
     <AlertDialog>
@@ -68,8 +68,8 @@ function ConfirmDeleteButton({ itemLabel, onConfirm }: { itemLabel: string; onCo
         <AlertDialogHeader>
           <AlertDialogTitle>Excluir {itemLabel}?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acao nao pode ser desfeita. Os dias ja calculados com base nesta vigencia serao recalculados
-            com a vigencia anterior.
+            Esta ação não pode ser desfeita. Os dias já calculados com base nesta vigência serão recalculados
+            com a vigência anterior.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -91,19 +91,19 @@ export default function SettingsPage() {
     <div className="max-w-3xl space-y-6">
       <ScreenIntro
         screenKey="configuracoes"
-        title="Configuracoes"
-        description="Personalize sua jornada e preferencias."
+        title="Configurações"
+        description="Personalize sua jornada e preferências."
         tips={[
-          { icon: SlidersHorizontal, text: "Em 'Preferencias', ajuste tema e notificacoes." },
-          { icon: Clock, text: "Em 'Jornada', defina sua carga horaria e corrija vigencias erradas a qualquer momento." },
+          { icon: SlidersHorizontal, text: "Em 'Preferências', ajuste tema e notificações." },
+          { icon: Clock, text: "Em 'Jornada', defina sua carga horaria e corrija vigências erradas a qualquer momento." },
           { icon: Wallet, text: "Em 'Financeiro', configure seu salario e os percentuais de hora extra." },
         ]}
       />
-      <h1 className="text-2xl font-semibold">Configuracoes</h1>
+      <h1 className="text-2xl font-semibold">Configurações</h1>
 
       <Tabs defaultValue="preferencias">
         <TabsList>
-          <TabsTrigger value="preferencias">Preferencias</TabsTrigger>
+          <TabsTrigger value="preferencias">Preferências</TabsTrigger>
           <TabsTrigger value="jornada">Jornada</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
         </TabsList>
@@ -125,7 +125,7 @@ export default function SettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Notificacoes</CardTitle>
+              <CardTitle className="text-base">Notificações</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {Object.entries(NOTIFICATION_LABELS).map(([key, label]) => {
@@ -154,8 +154,8 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="text-base">Chegada antecipada</CardTitle>
               <CardDescription>
-                Chegar antes do horario de entrada, está configurado que nao vale como hora extra -
-                voce so &quot;chegou mais cedo&quot;. Ative se quiser que qualquer chegada antecipada conte como
+                Chegar antes do horário de entrada, está configurado que não vale como hora extra -
+                você so &quot;chegou mais cedo&quot;. Ative se quiser que qualquer chegada antecipada conte como
                 hora extra.
               </CardDescription>
             </CardHeader>
@@ -171,7 +171,7 @@ export default function SettingsPage() {
               <span className="text-sm">
                 {settings?.count_early_arrival_as_overtime
                   ? "Chegada antecipada sempre conta como hora extra"
-                  : "Chegada antecipada nao conta como hora extra (padrao)"}
+                  : "Chegada antecipada não conta como hora extra (padrão)"}
               </span>
             </CardContent>
           </Card>
@@ -207,7 +207,7 @@ function ScheduleCard({ userId }: { userId: string }) {
   }, [userId]);
 
   useEffect(() => {
-    // busca o historico de vigencias ao montar - setState acontece apos o await
+    // busca o historico de vigências ao montar - setState acontece apos o await
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
@@ -239,10 +239,10 @@ function ScheduleCard({ userId }: { userId: string }) {
           notes: null,
           standardEntryTime: standardEntryTime || null,
         });
-        toast.success("Vigencia de carga horaria atualizada.");
+        toast.success("vigência de carga horaria atualizada.");
       } else {
         await repo.create(userId, effectiveFrom, hours, null, null, standardEntryTime || null);
-        toast.success("Nova vigencia de carga horaria salva.");
+        toast.success("Nova vigência de carga horaria salva.");
       }
       resetForm();
       await load();
@@ -258,7 +258,7 @@ function ScheduleCard({ userId }: { userId: string }) {
       const supabase = createClient();
       const repo = new ScheduleRepository(supabase);
       await repo.delete(id, userId);
-      toast.success("Vigencia excluida.");
+      toast.success("vigência excluída.");
       if (editingId === id) resetForm();
       await load();
     } catch (error) {
@@ -270,7 +270,7 @@ function ScheduleCard({ userId }: { userId: string }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Carga horaria</CardTitle>
-        <CardDescription>O horario de entrada padrao (opcional) e usado na regra de chegada antecipada acima.</CardDescription>
+        <CardDescription>O horário de entrada padrão (opcional) e usado na regra de chegada antecipada acima.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {entries.length === 0 ? (
@@ -281,14 +281,14 @@ function ScheduleCard({ userId }: { userId: string }) {
               <li key={entry.id} className="flex items-start justify-between gap-3 rounded-md border border-border p-2">
                 <span className="text-muted-foreground">
                   Vigente desde {formatDateBR(entry.effectiveFrom)}
-                  {entry.standardEntryTime && ` - entrada padrao ${entry.standardEntryTime}`} -{" "}
+                  {entry.standardEntryTime && ` - entrada padrão ${entry.standardEntryTime}`} -{" "}
                   {WEEKDAY_KEYS.map((k) => `${WEEKDAY_LABELS_PT[k].slice(0, 3)}: ${entry.weeklyHours[k]}h`).join(" | ")}
                 </span>
                 <div className="flex shrink-0 gap-1">
                   <Button variant="ghost" size="icon-sm" aria-label="Editar" onClick={() => startEdit(entry)}>
                     <Pencil className="size-4" />
                   </Button>
-                  <ConfirmDeleteButton itemLabel="esta vigencia de carga horaria" onConfirm={() => handleDelete(entry.id)} />
+                  <ConfirmDeleteButton itemLabel="esta vigência de carga horaria" onConfirm={() => handleDelete(entry.id)} />
                 </div>
               </li>
             ))}
@@ -297,9 +297,9 @@ function ScheduleCard({ userId }: { userId: string }) {
 
         {editingId && (
           <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm">
-            <span className="flex-1">Editando vigencia de {formatDateBR(effectiveFrom)}.</span>
+            <span className="flex-1">Editando vigência de {formatDateBR(effectiveFrom)}.</span>
             <Button variant="ghost" size="sm" onClick={resetForm}>
-              <X className="mr-1 size-3.5" /> Cancelar edicao
+              <X className="mr-1 size-3.5" /> Cancelar edição
             </Button>
           </div>
         )}
@@ -322,7 +322,7 @@ function ScheduleCard({ userId }: { userId: string }) {
 
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-1">
-            <Label className="text-xs">Horario de entrada padrao</Label>
+            <Label className="text-xs">horário de entrada padrão</Label>
             <Input
               type="time"
               className="w-32"
@@ -335,7 +335,7 @@ function ScheduleCard({ userId }: { userId: string }) {
             <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
           </div>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : editingId ? "Salvar alteracoes" : "Salvar nova vigencia"}
+            {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Salvar nova vigência"}
           </Button>
         </div>
       </CardContent>
@@ -372,8 +372,8 @@ function SalaryCard({ userId }: { userId: string }) {
   }, [load]);
 
   useEffect(() => {
-    // aplica a sugestao assim que ela chega, contanto que o usuario nao
-    // esteja editando uma vigencia existente (que ja tem seu proprio valor)
+    // aplica a sugestao assim que ela chega, contanto que o usuario não
+    // esteja editando uma vigência existente (que já tem seu proprio valor)
     if (!editingId && suggestedMonthlyHours) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMonthlyHours(suggestedMonthlyHours);
@@ -399,11 +399,11 @@ function SalaryCard({ userId }: { userId: string }) {
     try {
       salary = parseBRL(salaryText);
     } catch {
-      toast.error("Informe um valor de salario valido.");
+      toast.error("Informe um valor de salario válido.");
       return;
     }
     if (salary.isNegative()) {
-      toast.error("O salario nao pode ser negativo.");
+      toast.error("O salario não pode ser negativo.");
       return;
     }
     setSaving(true);
@@ -412,10 +412,10 @@ function SalaryCard({ userId }: { userId: string }) {
       const repo = new SalaryRepository(supabase);
       if (editingId) {
         await repo.update(editingId, userId, { effectiveFrom, salary, monthlyHours: new Decimal(monthlyHours) });
-        toast.success("Vigencia salarial atualizada.");
+        toast.success("vigência salarial atualizada.");
       } else {
         await repo.create(userId, effectiveFrom, salary, new Decimal(monthlyHours));
-        toast.success("Nova vigencia salarial salva.");
+        toast.success("Nova vigência salarial salva.");
       }
       resetForm();
       await load();
@@ -431,7 +431,7 @@ function SalaryCard({ userId }: { userId: string }) {
       const supabase = createClient();
       const repo = new SalaryRepository(supabase);
       await repo.delete(id, userId);
-      toast.success("Vigencia excluida.");
+      toast.success("vigência excluída.");
       if (editingId === id) resetForm();
       await load();
     } catch (error) {
@@ -459,7 +459,7 @@ function SalaryCard({ userId }: { userId: string }) {
                   <Button variant="ghost" size="icon-sm" aria-label="Editar" onClick={() => startEdit(entry)}>
                     <Pencil className="size-4" />
                   </Button>
-                  <ConfirmDeleteButton itemLabel="esta vigencia salarial" onConfirm={() => handleDelete(entry.id)} />
+                  <ConfirmDeleteButton itemLabel="esta vigência salarial" onConfirm={() => handleDelete(entry.id)} />
                 </div>
               </li>
             ))}
@@ -468,9 +468,9 @@ function SalaryCard({ userId }: { userId: string }) {
 
         {editingId && (
           <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm">
-            <span className="flex-1">Editando vigencia de {formatDateBR(effectiveFrom)}.</span>
+            <span className="flex-1">Editando vigência de {formatDateBR(effectiveFrom)}.</span>
             <Button variant="ghost" size="sm" onClick={resetForm}>
-              <X className="mr-1 size-3.5" /> Cancelar edicao
+              <X className="mr-1 size-3.5" /> Cancelar edição
             </Button>
           </div>
         )}
@@ -490,8 +490,8 @@ function SalaryCard({ userId }: { userId: string }) {
             />
             <p className="max-w-56 text-xs text-muted-foreground">
               {suggestedMonthlyHours
-                ? `Calculado pela sua jornada (${suggestedMonthlyHours / 5}h/semana). Nao e a soma de horas do mes - e o divisor legal (44h/sem = 220, 40h = 200, 36h = 180).`
-                : "Divisor legal, nao a soma de horas do mes (44h/sem = 220, 40h = 200, 36h = 180). Configure a jornada acima para calcular sozinho."}
+                ? `Calculado pela sua jornada (${suggestedMonthlyHours / 5}h/semana). não e a soma de horas do mes - e o divisor legal (44h/sem = 220, 40h = 200, 36h = 180).`
+                : "Divisor legal, não a soma de horas do mes (44h/sem = 220, 40h = 200, 36h = 180). Configure a jornada acima para calcular sozinho."}
             </p>
           </div>
           <div className="space-y-1">
@@ -499,7 +499,7 @@ function SalaryCard({ userId }: { userId: string }) {
             <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
           </div>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : editingId ? "Salvar alteracoes" : "Salvar nova vigencia"}
+            {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Salvar nova vigência"}
           </Button>
         </div>
       </CardContent>
@@ -571,7 +571,7 @@ function OvertimeRulesCard({ userId }: { userId: string }) {
       const supabase = createClient();
       const repo = new SalaryRepository(supabase);
       await repo.deleteOvertimeRule(id, userId);
-      toast.success("Regra excluida.");
+      toast.success("Regra excluída.");
       if (editingId === id) resetForm();
       await load();
     } catch (error) {
@@ -609,7 +609,7 @@ function OvertimeRulesCard({ userId }: { userId: string }) {
           <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm">
             <span className="flex-1">Editando regra &quot;{name}&quot;.</span>
             <Button variant="ghost" size="sm" onClick={resetForm}>
-              <X className="mr-1 size-3.5" /> Cancelar edicao
+              <X className="mr-1 size-3.5" /> Cancelar edição
             </Button>
           </div>
         )}
@@ -628,7 +628,7 @@ function OvertimeRulesCard({ userId }: { userId: string }) {
             <Input type="date" value={effectiveFrom} onChange={(e) => setEffectiveFrom(e.target.value)} />
           </div>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Salvando..." : editingId ? "Salvar alteracoes" : "Adicionar regra"}
+            {saving ? "Salvando..." : editingId ? "Salvar alterações" : "Adicionar regra"}
           </Button>
         </div>
       </CardContent>

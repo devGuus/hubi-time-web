@@ -23,7 +23,7 @@ import { ScreenIntro } from "@/components/shared/screen-intro";
 const LEGEND = [
   { color: "bg-success", label: "Completo" },
   { color: "bg-warning", label: "Incompleto" },
-  { color: "bg-destructive", label: "Inconsistencia" },
+  { color: "bg-destructive", label: "inconsistência" },
   { color: "bg-muted-foreground/30", label: "Sem jornada" },
   { color: "bg-primary", label: "Selecionado" },
 ];
@@ -31,7 +31,7 @@ const LEGEND = [
 const STATUS_LABEL_PT: Record<"complete" | "incomplete" | "inconsistent", string> = {
   complete: "Completo",
   incomplete: "Incompleto",
-  inconsistent: "Inconsistencia",
+  inconsistent: "inconsistência",
 };
 
 /** Dia do calendario com preview rapido (horas trabalhadas/status) ao passar o mouse. */
@@ -150,9 +150,9 @@ export default function CalendarPage() {
         title="Calendario"
         description="Veja e edite qualquer dia do mes num so lugar."
         tips={[
-          { icon: CalendarDays, text: "As cores mostram o status de cada dia: completo, incompleto ou com inconsistencia." },
-          { icon: MousePointerClick, text: "Passe o mouse sobre um dia para uma previa rapida das horas trabalhadas." },
-          { icon: Pencil, text: "Clique em qualquer dia para editar os horarios direto no painel ao lado." },
+          { icon: CalendarDays, text: "As cores mostram o status de cada dia: completo, incompleto ou com inconsistência." },
+          { icon: MousePointerClick, text: "Passe o mouse sobre um dia para uma prévia rapida das horas trabalhadas." },
+          { icon: Pencil, text: "Clique em qualquer dia para editar os horários direto no painel ao lado." },
         ]}
       />
       <h1 className="text-2xl font-semibold">Calendario</h1>

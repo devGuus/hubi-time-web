@@ -19,7 +19,7 @@ interface Tip {
 }
 
 interface ScreenIntroProps {
-  /** Chave unica da tela - usada para lembrar que o tutorial ja foi visto. */
+  /** Chave unica da tela - usada para lembrar que o tutorial já foi visto. */
   screenKey: string;
   title: string;
   description: string;

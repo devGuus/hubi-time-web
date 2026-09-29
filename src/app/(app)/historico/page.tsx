@@ -134,7 +134,7 @@ export default function HistoryPage() {
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Entrada</TableHead>
-                  <TableHead className="hidden md:table-cell">Almoco</TableHead>
+                  <TableHead className="hidden md:table-cell">almoço</TableHead>
                   <TableHead className="hidden md:table-cell">Retorno</TableHead>
                   <TableHead>Saida</TableHead>
                   <TableHead>Trabalhadas</TableHead>

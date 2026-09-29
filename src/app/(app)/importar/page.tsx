@@ -165,11 +165,11 @@ export default function ImportPage() {
       <ScreenIntro
         screenKey="importar"
         title="Importar registros antigos"
-        description="Traga anotacoes de jornada que voce ja tinha, sem redigitar tudo."
+        description="Traga anotações de jornada que você já tinha, sem redigitar tudo."
         tips={[
           { icon: FileSpreadsheet, text: "Baixe o modelo (CSV ou Excel) e preencha com seus dados." },
-          { icon: Bot, text: "Anotacoes bagunçadas? Peca para uma IA reescrever no formato do modelo." },
-          { icon: CheckCircle2, text: "Antes de salvar, voce revisa uma previa e decide o que importar." },
+          { icon: Bot, text: "anotações bagunçadas? Peca para uma IA reescrever no formato do modelo." },
+          { icon: CheckCircle2, text: "Antes de salvar, você revisa uma prévia e decide o que importar." },
         ]}
       />
       <h1 className="text-2xl font-semibold">Importar registros</h1>
@@ -183,24 +183,24 @@ export default function ImportPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-1.5">
-            {["Data", "Entrada", "Saida almoco", "Retorno", "Saida", "Tipo de dia", "Observacoes"].map((h) => (
+            {["Data", "Entrada", "Saida almoço", "Retorno", "Saida", "Tipo de dia", "observações"].map((h) => (
               <Badge key={h} variant="secondary">
                 {h}
               </Badge>
             ))}
           </div>
           <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
-            <li>Data no formato DD/MM/AAAA. Horarios no formato HH:MM.</li>
+            <li>Data no formato DD/MM/AAAA. horários no formato HH:MM.</li>
             <li>
               Tipo de dia (opcional): {Object.values(DAY_TYPE_LABELS_PT).join(", ")}. Deixe em branco para
               &quot;Dia normal&quot;.
             </li>
-            <li>Entrada/Almoco/Saida podem ficar em branco em dias de folga, ferias, etc.</li>
+            <li>Entrada/almoço/Saida podem ficar em branco em dias de folga, férias, etc.</li>
           </ul>
           <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-sm">
             <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
             <p className="text-muted-foreground">
-              Se suas anotacoes antigas estao num formato diferente (texto livre, outra planilha, PDF), copie o
+              Se suas anotações antigas estao num formato diferente (texto livre, outra planilha, PDF), copie o
               conteudo e peca para uma IA (Claude, ChatGPT, etc.) reescrever exatamente nas colunas acima antes de
               enviar aqui.
             </p>
@@ -252,7 +252,7 @@ export default function ImportPage() {
           <CardHeader>
             <CardTitle className="text-base">3. Revisar e confirmar</CardTitle>
             <CardDescription>
-              {counts.novo} novo(s), {counts.conflito} data(s) ja existente(s), {counts.erro} com erro (serao
+              {counts.novo} novo(s), {counts.conflito} data(s) já existente(s), {counts.erro} com erro (serão
               ignoradas).
             </CardDescription>
           </CardHeader>
@@ -264,7 +264,7 @@ export default function ImportPage() {
                   onCheckedChange={(checked) => toggleAllConflicts(Boolean(checked))}
                 />
                 <label htmlFor="overwrite-all" className="text-sm">
-                  Sobrescrever todas as datas ja existentes
+                  Sobrescrever todas as datas já existentes
                 </label>
               </div>
             )}
@@ -275,7 +275,7 @@ export default function ImportPage() {
                   <TableRow>
                     <TableHead>Data</TableHead>
                     <TableHead>Entrada</TableHead>
-                    <TableHead>Almoco</TableHead>
+                    <TableHead>almoço</TableHead>
                     <TableHead>Saida</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Situacao</TableHead>
@@ -302,7 +302,7 @@ export default function ImportPage() {
                         )}
                         {row.status === "conflito" && (
                           <Badge variant="outline" className="gap-1 text-warning">
-                            <AlertTriangle className="size-3" /> Ja existe
+                            <AlertTriangle className="size-3" /> já existe
                           </Badge>
                         )}
                         {row.status === "erro" && (

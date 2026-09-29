@@ -1,6 +1,6 @@
 /**
  * O proxy (src/proxy.ts) sempre redireciona "/" para /hoje ou /login antes
- * de chegar aqui. Este fallback so aparece em cenarios de borda (proxy nao
+ * de chegar aqui. Este fallback so aparece em cenarios de borda (proxy não
  * executado ainda).
  */
 export default function RootPage() {
