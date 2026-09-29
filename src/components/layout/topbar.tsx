@@ -1,23 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useState } from "react";
-import { LogOut, Menu, Moon, Sun } from "lucide-react";
+import { Menu, Moon, Sun } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { avatarGradient } from "@/lib/avatar-color";
 import { SidebarNav } from "@/components/layout/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 function initialsOf(name: string): string {
@@ -30,8 +22,7 @@ function initialsOf(name: string): string {
 }
 
 export function Topbar() {
-  const router = useRouter();
-  const { user, profile, signOut, updateSettings } = useAuth();
+  const { user, profile, updateSettings } = useAuth();
   const { theme, setTheme } = useTheme();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -43,11 +34,6 @@ export function Topbar() {
     } catch {
       // preferencia de tema ainda aplica localmente mesmo se a persistencia falhar
     }
-  }
-
-  async function handleSignOut() {
-    await signOut();
-    router.push("/login");
   }
 
   const displayName = profile?.name || user?.email || "";
@@ -75,31 +61,23 @@ export function Topbar() {
           </span>
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button variant="ghost" className="gap-2 px-2">
-                <Avatar className="size-7">
-                  <AvatarFallback
-                    className="text-xs text-white"
-                    style={{ background: avatarGradient(displayName || "?") }}
-                  >
-                    {initialsOf(displayName || "?")}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden text-sm sm:inline">{displayName}</span>
-              </Button>
-            }
-          />
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>
-              <LogOut className="mr-2 size-4" />
-              Sair
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+          variant="ghost"
+          className="gap-2 px-2"
+          render={
+            <Link href="/perfil" aria-label="Abrir perfil do usuário">
+              <Avatar className="size-7">
+                <AvatarFallback
+                  className="text-xs text-white"
+                  style={{ background: avatarGradient(displayName || "?") }}
+                >
+                  {initialsOf(displayName || "?")}
+                </AvatarFallback>
+              </Avatar>
+              <span className="hidden text-sm sm:inline">{displayName}</span>
+            </Link>
+          }
+        />
       </div>
     </header>
   );
