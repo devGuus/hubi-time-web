@@ -88,14 +88,21 @@ export default function TodayPage() {
           label="Horas trabalhadas ate agora"
           value={formatMinutesAsHours(calc?.workedMinutes ?? 0)}
           icon={Clock}
+          info="Tempo já registrado hoje a partir da sua entrada. Atualiza sozinho enquanto o dia está em andamento."
         />
         <StatCard
           label="Saldo estimado do dia"
           value={saldo?.text ?? "--"}
           icon={saldo?.icon ?? Scale}
           accentClassName={saldo?.accentClassName}
+          info="Diferença entre o que você já trabalhou hoje e a carga prevista para o dia — é medido em horas, não em dinheiro. Positivo (+) é hora a mais; negativo (−) é hora que falta."
         />
-        <StatCard label="Situacao do registro" value={status} icon={CheckCircle2} />
+        <StatCard
+          label="Situacao do registro"
+          value={status}
+          icon={CheckCircle2}
+          info="Mostra se hoje está completo (entrada, almoço e saída preenchidos), em andamento, ou se você ainda não bateu o ponto."
+        />
       </div>
 
       <Card>

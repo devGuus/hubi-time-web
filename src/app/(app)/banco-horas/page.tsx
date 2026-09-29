@@ -146,24 +146,28 @@ export default function BankOfHoursPage() {
           value={dailyBalance.text}
           icon={dailyBalance.icon}
           accentClassName={dailyBalance.accentClassName}
+          info="Diferença entre horas trabalhadas e previstas hoje — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
         />
         <StatCard
           label="Saldo da semana"
           value={weeklyBalance.text}
           icon={weeklyBalance.icon}
           accentClassName={weeklyBalance.accentClassName}
+          info="Diferença entre horas trabalhadas e previstas na semana atual — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
         />
         <StatCard
           label="Saldo do mes"
           value={monthlyBalance.text}
           icon={monthlyBalance.icon}
           accentClassName={monthlyBalance.accentClassName}
+          info="Diferença entre horas trabalhadas e previstas no mês atual — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
         />
         <StatCard
           label="Saldo do ano"
           value={yearlyBalance.text}
           icon={yearlyBalance.icon}
           accentClassName={yearlyBalance.accentClassName}
+          info="Diferença entre horas trabalhadas e previstas no ano atual — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
         />
         <StatCard
           label="Saldo acumulado"
@@ -171,6 +175,7 @@ export default function BankOfHoursPage() {
           caption="Periodo selecionado"
           icon={accumulatedBalance.icon}
           accentClassName={accumulatedBalance.accentClassName}
+          info="Diferença entre horas trabalhadas e previstas no período escolhido no seletor acima — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
         />
       </div>
 

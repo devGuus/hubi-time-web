@@ -5,6 +5,7 @@ import { TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCountUp } from "@/lib/hooks/use-count-up";
 import { cn } from "@/lib/utils";
+import { InfoTip } from "./info-tip";
 
 interface Trend {
   label: string;
@@ -21,6 +22,7 @@ interface StatCardProps {
   trend?: Trend;
   numericValue?: number;
   formatValue?: (n: number) => string;
+  info?: string;
 }
 
 export function StatCard({
@@ -32,6 +34,7 @@ export function StatCard({
   trend,
   numericValue,
   formatValue,
+  info,
 }: StatCardProps) {
   const animated = useCountUp(numericValue ?? 0);
   const displayValue = numericValue !== undefined && formatValue ? formatValue(animated) : value;
@@ -39,7 +42,10 @@ export function StatCard({
   return (
     <Card interactive>
       <CardHeader className="flex-row items-start justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+        <CardTitle className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+          {label}
+          {info && <InfoTip label={label} text={info} />}
+        </CardTitle>
         {Icon && (
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Icon className="size-4" />

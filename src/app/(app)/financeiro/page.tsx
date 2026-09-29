@@ -188,10 +188,26 @@ export default function FinancePage() {
           label="Salario mensal vigente"
           value={currentSalary ? formatBRL(currentSalary.salary) : "não configurado"}
           icon={Wallet}
+          info="Valor do salário cadastrado que está em vigor hoje, conforme o histórico em Configurações."
         />
-        <StatCard label="Valor estimado da hora" value={currentSalary ? formatBRL(hourlyRate) : "--"} icon={Coins} />
-        <StatCard label="Horas trabalhadas" value={formatMinutesAsHours(summary.workedMinutes)} icon={Timer} />
-        <StatCard label="Horas extras" value={formatMinutesAsHours(overtimeMinutes)} icon={Flame} />
+        <StatCard
+          label="Valor estimado da hora"
+          value={currentSalary ? formatBRL(hourlyRate) : "--"}
+          icon={Coins}
+          info="Salário mensal dividido pela carga mensal de horas (o 'divisor') — mesmo método usado em folhas de pagamento no Brasil."
+        />
+        <StatCard
+          label="Horas trabalhadas"
+          value={formatMinutesAsHours(summary.workedMinutes)}
+          icon={Timer}
+          info="Soma de todo o tempo registrado no período, incluindo horas extras."
+        />
+        <StatCard
+          label="Horas extras"
+          value={formatMinutesAsHours(overtimeMinutes)}
+          icon={Flame}
+          info="Soma só dos dias em que você trabalhou além do previsto. Diferente do Saldo: aqui um dia com falta não desconta um dia com hora extra — cada dia conta separado, como manda a CLT."
+        />
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
@@ -199,10 +215,27 @@ export default function FinancePage() {
           value={periodBalance.text}
           icon={periodBalance.icon}
           accentClassName={periodBalance.accentClassName}
+          info="Diferença entre horas trabalhadas e previstas no período escolhido acima — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas."
         />
-        <StatCard label="Estimativa horas normais" value={formatBRL(regularVal)} icon={Calculator} />
-        <StatCard label="Estimativa horas extras" value={formatBRL(overtimeVal)} icon={BadgeDollarSign} />
-        <StatCard label="Estimativa total" value={formatBRL(totalVal)} icon={TrendingUp} accentClassName="text-primary" />
+        <StatCard
+          label="Estimativa horas normais"
+          value={formatBRL(regularVal)}
+          icon={Calculator}
+          info="Valor estimado das horas dentro da jornada normal, ao preço da sua hora atual."
+        />
+        <StatCard
+          label="Estimativa horas extras"
+          value={formatBRL(overtimeVal)}
+          icon={BadgeDollarSign}
+          info="Valor estimado das horas extras, já com o adicional legal (mínimo 50% em dias normais, 100% aos domingos e feriados, pela CLT)."
+        />
+        <StatCard
+          label="Estimativa total"
+          value={formatBRL(totalVal)}
+          icon={TrendingUp}
+          accentClassName="text-primary"
+          info="Soma da estimativa de horas normais com a de horas extras — previsão de quanto seu trabalho no período valeria, para controle pessoal."
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { AlertCircle, BarChart3, CalendarCheck, Clock, Flame, Gauge, Timer } from "lucide-react";
+import { AlertCircle, BarChart3, CalendarCheck, CheckCircle2, Clock, Flame, Gauge, Timer } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { balanceDisplay } from "@/lib/balance-display";
@@ -26,6 +26,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
+import { InfoTip } from "@/components/shared/info-tip";
 import { ScreenIntro } from "@/components/shared/screen-intro";
 import { StatCard } from "@/components/shared/stat-card";
 
@@ -121,16 +122,74 @@ export default function HoursControlPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Horas previstas" value={formatMinutesAsHours(summary.expectedMinutes)} icon={Clock} />
-        <StatCard label="Horas trabalhadas" value={formatMinutesAsHours(summary.workedMinutes)} icon={Timer} />
-        <StatCard label="Saldo do mes" value={saldo.text} icon={saldo.icon} accentClassName={saldo.accentClassName} />
-        <StatCard label="Media diaria" value={formatMinutesAsHours(averageDaily)} icon={Gauge} />
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+            Saldo do mes
+            <InfoTip
+              label="Saldo do mes"
+              text="Diferença entre horas trabalhadas e previstas no mês — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
+            />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className={`text-4xl font-bold tabular-nums ${saldo.accentClassName}`}>{saldo.text}</div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {balanceMinutes >= 0 ? "acima da carga prevista" : "abaixo da carga prevista"}
+          </p>
+        </CardContent>
+      </Card>
+
+      <p className="text-sm text-muted-foreground">
+        {monthLabel(month)} de {year}: você trabalhou {formatMinutesAsHours(summary.workedMinutes)}, ficando{" "}
+        {formatMinutesAsHours(Math.abs(balanceMinutes))} {balanceMinutes >= 0 ? "acima" : "abaixo"} das{" "}
+        {formatMinutesAsHours(summary.expectedMinutes)} previstas, em {summary.workedDaysCount}{" "}
+        {summary.workedDaysCount === 1 ? "dia trabalhado" : "dias trabalhados"}.{" "}
+        {summary.incompleteDaysCount === 0 ? (
+          <span className="inline-flex items-center gap-1 text-success">
+            <CheckCircle2 className="size-3.5" /> Nenhum dia incompleto
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-warning">
+            <AlertCircle className="size-3.5" /> {summary.incompleteDaysCount}{" "}
+            {summary.incompleteDaysCount === 1 ? "dia incompleto" : "dias incompletos"}
+          </span>
+        )}
+      </p>
+
+      <div className="grid grid-cols-2 gap-4">
+        <StatCard
+          label="Horas trabalhadas"
+          value={formatMinutesAsHours(summary.workedMinutes)}
+          icon={Timer}
+          info="Soma de todo o tempo registrado no período, incluindo horas extras."
+        />
+        <StatCard
+          label="Horas previstas"
+          value={formatMinutesAsHours(summary.expectedMinutes)}
+          icon={Clock}
+          info="Soma da carga horária configurada para os dias do período, conforme sua jornada cadastrada."
+        />
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <StatCard label="Dias trabalhados" value={String(summary.workedDaysCount)} icon={CalendarCheck} />
-        <StatCard label="Dias incompletos" value={String(summary.incompleteDaysCount)} icon={AlertCircle} />
-        <StatCard label="Horas extras" value={formatMinutesAsHours(overtimeMinutes)} icon={Flame} />
+        <StatCard
+          label="Horas extras"
+          value={formatMinutesAsHours(overtimeMinutes)}
+          icon={Flame}
+          info="Soma só dos dias em que você trabalhou além do previsto. Diferente do Saldo: aqui um dia com falta não desconta um dia com hora extra — cada dia conta separado, como manda a CLT."
+        />
+        <StatCard
+          label="Media diaria"
+          value={formatMinutesAsHours(averageDaily)}
+          icon={Gauge}
+          info="Média de horas trabalhadas, considerando só os dias em que você registrou algum horário."
+        />
+        <StatCard
+          label="Dias trabalhados"
+          value={String(summary.workedDaysCount)}
+          icon={CalendarCheck}
+          info="Quantidade de dias do período em que você registrou algum horário de trabalho."
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
