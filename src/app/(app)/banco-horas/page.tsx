@@ -40,6 +40,7 @@ function rangeFor(period: ChartPeriod): [DateISO, DateISO] {
 
 export default function BankOfHoursPage() {
   const { user, settings } = useAuth();
+  const [now, setNow] = useState(new Date());
   const [period, setPeriod] = useState<ChartPeriod>("year");
   const [records, setRecords] = useState<WorkRecord[]>([]);
   const [schedules, setSchedules] = useState<WorkScheduleEntry[]>([]);
@@ -48,7 +49,12 @@ export default function BankOfHoursPage() {
   const [chartStart, chartEnd] = rangeFor(period);
   const [yearStart] = yearRange(Number(today.slice(0, 4)));
   const fetchStart = chartStart < yearStart ? chartStart : yearStart;
-  const fetchEnd = chartEnd > today ? chartEnd : today;
+  const fetchEnd = today;
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -84,11 +90,11 @@ export default function BankOfHoursPage() {
           day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
         },
         schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
-        undefined,
+        now,
         resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
       );
     });
-  }, [records, schedules, fetchStart, fetchEnd, settings?.count_early_arrival_as_overtime]);
+  }, [records, schedules, fetchStart, fetchEnd, settings?.count_early_arrival_as_overtime, now]);
 
   const byDate = new Map(allDays.map((d) => [d.workDate, d]));
   const todayCalc = byDate.get(today);

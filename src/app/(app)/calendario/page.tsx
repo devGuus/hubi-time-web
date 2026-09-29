@@ -39,11 +39,13 @@ function DayButtonWithPreview({
   recordsByDate,
   schedules,
   countEarlyArrivalAsOvertime,
+  now,
   ...props
 }: React.ComponentProps<typeof DayButton> & {
   recordsByDate: Record<DateISO, WorkRecord>;
   schedules: WorkScheduleEntry[];
   countEarlyArrivalAsOvertime?: boolean;
+  now: Date;
 }) {
   const dateIso = `${props.day.date.getFullYear()}-${(props.day.date.getMonth() + 1).toString().padStart(2, "0")}-${props.day.date.getDate().toString().padStart(2, "0")}`;
   const record = recordsByDate[dateIso];
@@ -61,7 +63,7 @@ function DayButtonWithPreview({
           day_type: record.day_type as DayType,
         },
         schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
-        undefined,
+        now,
         resolveOvertimeOptions(record.count_early_arrival_as_overtime, countEarlyArrivalAsOvertime)
       )
     : null;
@@ -97,11 +99,17 @@ function statusOf(record: WorkRecord | undefined): "complete" | "incomplete" | "
 
 export default function CalendarPage() {
   const { user, settings } = useAuth();
+  const [now, setNow] = useState(new Date());
   const today = todayIso();
   const [selectedDate, setSelectedDate] = useState<DateISO>(today);
   const [monthCursor, setMonthCursor] = useState(toLocalDate(today));
   const [records, setRecords] = useState<Record<DateISO, WorkRecord>>({});
   const [schedules, setSchedules] = useState<WorkScheduleEntry[]>([]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const loadMonth = useCallback(async () => {
     if (!user) return;
@@ -137,10 +145,11 @@ export default function CalendarPage() {
         recordsByDate={records}
         schedules={schedules}
         countEarlyArrivalAsOvertime={settings?.count_early_arrival_as_overtime}
+        now={now}
         {...props}
       />
     ),
-    [records, schedules, settings?.count_early_arrival_as_overtime]
+    [records, schedules, settings?.count_early_arrival_as_overtime, now]
   );
 
   return (

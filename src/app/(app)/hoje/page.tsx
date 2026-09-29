@@ -54,7 +54,7 @@ export default function TodayPage() {
       )
     : null;
 
-  const saldo = calc ? balanceDisplay(calc.balanceMinutes) : null;
+  const saldo = calc && schedule ? balanceDisplay(calc.balanceMinutes) : null;
 
   const status = !calc
     ? "--"
@@ -86,12 +86,12 @@ export default function TodayPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
           label="Horas trabalhadas ate agora"
-          value={calc ? formatMinutesAsHours(calc.workedMinutes) : "00h00"}
+          value={formatMinutesAsHours(calc?.workedMinutes ?? 0)}
           icon={Clock}
         />
         <StatCard
           label="Saldo estimado do dia"
-          value={saldo?.text ?? "00h00"}
+          value={saldo?.text ?? "--"}
           icon={saldo?.icon ?? Scale}
           accentClassName={saldo?.accentClassName}
         />

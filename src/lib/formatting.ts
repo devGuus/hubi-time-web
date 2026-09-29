@@ -1,4 +1,4 @@
-/** Formatacao de duracoes de tempo para exibicao ("08h34"). */
+/** Formata durações como horas e minutos para não confundi-las com horas do relógio. */
 
 export function formatMinutesAsHours(totalMinutes: number, showSign = false): string {
   let sign = "";
@@ -11,7 +11,7 @@ export function formatMinutesAsHours(totalMinutes: number, showSign = false): st
   }
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  return `${sign}${hours.toString().padStart(2, "0")}h${mins.toString().padStart(2, "0")}`;
+  return `${sign}${hours}h ${mins.toString().padStart(2, "0")}min`;
 }
 
 /** "HH:MM:SS" ou "HH:MM" (retorno do Postgres para colunas TIME) -> "HH:MM". */

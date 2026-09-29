@@ -57,13 +57,21 @@ function rangeFor(option: PeriodOption): [DateISO, DateISO] {
 
 export default function FinancePage() {
   const { user, settings } = useAuth();
+  const [now, setNow] = useState(new Date());
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [records, setRecords] = useState<WorkRecord[]>([]);
   const [schedules, setSchedules] = useState<WorkScheduleEntry[]>([]);
   const [salaryHistory, setSalaryHistory] = useState<SalaryEntry[]>([]);
   const [overtimeRules, setOvertimeRules] = useState<OvertimeRule[]>([]);
 
-  const [start, end] = rangeFor(period);
+  const [start, periodEnd] = rangeFor(period);
+  const today = todayIso();
+  const end = periodEnd < today ? periodEnd : today;
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -104,20 +112,37 @@ export default function FinancePage() {
           day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
         },
         schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
-        undefined,
+        now,
         resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
       );
     });
-  }, [records, schedules, start, end, settings?.count_early_arrival_as_overtime]);
+  }, [records, schedules, start, end, settings?.count_early_arrival_as_overtime, now]);
 
   const summary = summarizePeriod(days, start, end);
   const periodBalance = balanceDisplay(summary.workedMinutes - summary.expectedMinutes);
   const currentSalary = SalaryRepository.pickEffective(salaryHistory, todayIso());
-  const applicableRule = SalaryRepository.pickEffectiveRule(overtimeRules, todayIso());
   const hourlyRate = currentSalary ? hourlyRateOf(currentSalary) : new Decimal(0);
   const overtimeMinutes = days.reduce((t, d) => t + Math.max(d.balanceMinutes, 0), 0);
-  const overtimeVal = overtimeValueForPeriod(days, hourlyRate, applicableRule);
-  const regularVal = regularHoursValue(summary.workedMinutes, overtimeMinutes, hourlyRate);
+  const { overtimeVal, regularVal } = days.reduce(
+    (totals, day) => {
+      const salary = SalaryRepository.pickEffective(salaryHistory, day.workDate);
+      if (!salary) return totals;
+
+      const dayRate = hourlyRateOf(salary);
+      const overtime = overtimeValueForPeriod(
+        [day],
+        dayRate,
+        SalaryRepository.pickEffectiveRule(overtimeRules, day.workDate)
+      );
+      const regular = regularHoursValue(day.workedMinutes, Math.max(day.balanceMinutes, 0), dayRate);
+
+      return {
+        overtimeVal: totals.overtimeVal.plus(overtime),
+        regularVal: totals.regularVal.plus(regular),
+      };
+    },
+    { overtimeVal: new Decimal(0), regularVal: new Decimal(0) }
+  );
   const totalVal = regularVal.plus(overtimeVal);
 
   const salaryChartData = [...salaryHistory]

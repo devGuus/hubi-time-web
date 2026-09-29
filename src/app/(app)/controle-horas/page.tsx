@@ -31,12 +31,20 @@ import { StatCard } from "@/components/shared/stat-card";
 
 export default function HoursControlPage() {
   const { user, settings } = useAuth();
+  const [now, setNow] = useState(new Date());
   const [monthAnchor, setMonthAnchor] = useState<DateISO>(todayIso().slice(0, 8) + "01");
   const [records, setRecords] = useState<WorkRecord[]>([]);
   const [schedules, setSchedules] = useState<WorkScheduleEntry[]>([]);
 
   const [year, month] = monthAnchor.split("-").map(Number);
-  const [start, end] = monthRange(year, month);
+  const [start, monthEnd] = monthRange(year, month);
+  const today = todayIso();
+  const end = monthEnd < today ? monthEnd : today;
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -69,7 +77,7 @@ export default function HoursControlPage() {
         day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
       },
       schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
-      undefined,
+      now,
       resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
     );
   });

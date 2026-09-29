@@ -2,7 +2,7 @@ import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
 
 import { formatMinutesAsHours } from "./formatting";
 
-/** Apresenta um saldo (minutos) sem sinal de menos - a direcao vira icone + cor. */
+/** Apresenta o sinal do saldo junto ao ícone e à cor que indicam sua direção. */
 export function balanceDisplay(minutes: number): {
   text: string;
   icon: LucideIcon;
@@ -10,7 +10,7 @@ export function balanceDisplay(minutes: number): {
 } {
   const positive = minutes >= 0;
   return {
-    text: formatMinutesAsHours(Math.abs(minutes)),
+    text: formatMinutesAsHours(minutes, true),
     icon: positive ? ArrowUpRight : ArrowDownRight,
     accentClassName: positive ? "text-success" : "text-destructive",
   };
