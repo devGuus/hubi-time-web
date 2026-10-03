@@ -4,13 +4,12 @@
  * Tela 'Financeiro': estimativas pessoais de valor do trabalho e horas extras.
  * Os valores exibidos sao SEMPRE estimativas de controle pessoal.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { Decimal } from "decimal.js";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AlertCircle, BadgeDollarSign, Calculator, Coins, Flame, Timer, TrendingUp, Wallet } from "lucide-react";
+import { Lock, TrendingUp, Wallet } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
-import { balanceDisplay } from "@/lib/balance-display";
 import {
   computeDay,
   resolveOvertimeOptions,
@@ -22,6 +21,8 @@ import {
 import { DayType } from "@/lib/constants";
 import { iterDates, monthRange, todayIso, yearRange, type DateISO } from "@/lib/dates";
 import { formatMinutesAsHours } from "@/lib/formatting";
+import { useCountUp } from "@/lib/hooks/use-count-up";
+import { usePremiumGate } from "@/lib/hooks/use-premium-gate";
 import { formatBRL } from "@/lib/money";
 import { ScheduleRepository, type WorkScheduleEntry } from "@/lib/repositories/schedule-repository";
 import {
@@ -32,14 +33,25 @@ import {
 } from "@/lib/repositories/salary-repository";
 import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-repository";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
+import { InfoTip } from "@/components/shared/info-tip";
 import { LockedCard } from "@/components/shared/locked-card";
 import { ScreenIntro } from "@/components/shared/screen-intro";
-import { StatCard } from "@/components/shared/stat-card";
 
 type PeriodOption = "month" | "quarter" | "semester" | "year";
+type LockedProps = Record<string, unknown>;
+
+const MASK = "••••••";
+
+const PERIOD_LABELS: Record<PeriodOption, string> = {
+  month: "Mês atual",
+  quarter: "Trimestre atual",
+  semester: "Semestre atual",
+  year: "Ano atual",
+};
 
 function rangeFor(option: PeriodOption): [DateISO, DateISO] {
   const today = todayIso();
@@ -58,6 +70,7 @@ function rangeFor(option: PeriodOption): [DateISO, DateISO] {
 
 export default function FinancePage() {
   const { user, settings, isPremium } = useAuth();
+  const { requirePremium } = usePremiumGate();
   const [now, setNow] = useState(new Date());
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [records, setRecords] = useState<WorkRecord[]>([]);
@@ -120,7 +133,7 @@ export default function FinancePage() {
   }, [records, schedules, start, end, settings?.count_early_arrival_as_overtime, now]);
 
   const summary = summarizePeriod(days, start, end);
-  const periodBalance = balanceDisplay(summary.workedMinutes - summary.expectedMinutes);
+  const periodBalanceMinutes = summary.workedMinutes - summary.expectedMinutes;
   const currentSalary = SalaryRepository.pickEffective(salaryHistory, todayIso());
   const hourlyRate = currentSalary ? hourlyRateOf(currentSalary) : new Decimal(0);
   const overtimeMinutes = days.reduce((t, d) => t + Math.max(d.balanceMinutes, 0), 0);
@@ -152,6 +165,21 @@ export default function FinancePage() {
 
   const monthsChartData = useMemo(() => groupByMonth(days), [days]);
 
+  const lockedProps: LockedProps = isPremium
+    ? {}
+    : {
+        role: "button" as const,
+        tabIndex: 0,
+        "aria-label": "Recurso dos planos pagos. Ative para ver os planos.",
+        onClick: () => requirePremium("Financeiro", () => {}),
+        onKeyDown: (event: KeyboardEvent) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            requirePremium("Financeiro", () => {});
+          }
+        },
+      };
+
   return (
     <div className="space-y-6">
       <ScreenIntro
@@ -160,15 +188,14 @@ export default function FinancePage() {
         description="Estimativas de valor das suas horas trabalhadas."
         tips={[
           { icon: Wallet, text: "Configure seu salario e carga mensal em Configuracoes para ver os valores aqui." },
-          { icon: Coins, text: "Veja estimativas de horas normais, extras e o total do periodo." },
-          { icon: AlertCircle, text: "Sao estimativas para controle pessoal - não substituem sua folha de pagamento oficial." },
+          { icon: TrendingUp, text: "Veja a estimativa total do periodo em destaque, com o detalhamento abaixo." },
         ]}
       />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Financeiro</h1>
-          <p className="text-sm italic text-muted-foreground">
-            Valores estimados para controle pessoal. não substituem sua folha de pagamento oficial.
+          <p className="text-sm text-muted-foreground">
+            Estimativas para controle pessoal — não substituem sua folha de pagamento oficial.
           </p>
         </div>
         <Select value={period} onValueChange={(v) => setPeriod(v as PeriodOption)}>
@@ -176,82 +203,74 @@ export default function FinancePage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="month">Mes atual</SelectItem>
-            <SelectItem value="quarter">Trimestre atual</SelectItem>
-            <SelectItem value="semester">Semestre atual</SelectItem>
-            <SelectItem value="year">Ano atual</SelectItem>
+            {Object.entries(PERIOD_LABELS).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard
-          label="Salario mensal vigente"
+      <div className="grid grid-cols-2 divide-y divide-foreground/10 rounded-2xl bg-card sm:divide-x sm:divide-y-0">
+        <Metric
+          label="Salário mensal vigente"
           value={currentSalary ? formatBRL(currentSalary.salary) : "não configurado"}
-          icon={Wallet}
           info="Valor do salário cadastrado que está em vigor hoje, conforme o histórico em Configurações."
           locked={!isPremium}
         />
-        <StatCard
+        <Metric
           label="Valor estimado da hora"
           value={currentSalary ? formatBRL(hourlyRate) : "--"}
-          icon={Coins}
           info="Salário mensal dividido pela carga mensal de horas (o 'divisor') — mesmo método usado em folhas de pagamento no Brasil."
           locked={!isPremium}
         />
-        <StatCard
-          label="Horas trabalhadas"
-          value={formatMinutesAsHours(summary.workedMinutes)}
-          icon={Timer}
-          info="Soma de todo o tempo registrado no período, incluindo horas extras."
-          locked={!isPremium}
-        />
-        <StatCard
-          label="Horas extras"
-          value={formatMinutesAsHours(overtimeMinutes)}
-          icon={Flame}
-          info="Soma só dos dias em que você trabalhou além do previsto. Diferente do Saldo de horas: aqui um dia com falta não desconta um dia com hora extra — cada dia conta separado, como manda a CLT."
-          locked={!isPremium}
-        />
       </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard
-          label="Banco de horas do periodo"
-          value={periodBalance.text}
-          icon={periodBalance.icon}
-          accentClassName={periodBalance.accentClassName}
+
+      <TotalHero
+        totalVal={totalVal}
+        regularVal={regularVal}
+        overtimeVal={overtimeVal}
+        workedMinutes={summary.workedMinutes}
+        overtimeMinutes={overtimeMinutes}
+        periodLabel={PERIOD_LABELS[period]}
+        isPremium={isPremium}
+        lockedProps={lockedProps}
+      />
+
+      <section
+        aria-label="Detalhamento do período"
+        className={cn(
+          "grid grid-cols-1 divide-y divide-foreground/10 rounded-2xl bg-card sm:grid-cols-3 sm:divide-x sm:divide-y-0",
+          !isPremium && "cursor-pointer transition-colors hover:bg-card/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        )}
+        {...lockedProps}
+      >
+        <Metric
+          label="Banco de horas do período"
+          value={formatMinutesAsHours(periodBalanceMinutes, true)}
           info="Diferença entre horas trabalhadas e previstas no período escolhido acima — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas."
           locked={!isPremium}
         />
-        <StatCard
+        <Metric
           label="Estimativa horas normais"
           value={formatBRL(regularVal)}
-          icon={Calculator}
           info="Valor estimado das horas dentro da jornada normal, ao preço da sua hora atual."
           locked={!isPremium}
         />
-        <StatCard
+        <Metric
           label="Estimativa horas extras"
           value={formatBRL(overtimeVal)}
-          icon={BadgeDollarSign}
           info="Valor estimado das horas extras, já com o adicional legal (mínimo 50% em dias normais, 100% aos domingos e feriados, pela CLT)."
           locked={!isPremium}
         />
-        <StatCard
-          label="Estimativa total"
-          value={formatBRL(totalVal)}
-          icon={TrendingUp}
-          accentClassName="text-primary"
-          info="Soma da estimativa de horas normais com a de horas extras — previsão de quanto seu trabalho no período valeria, para controle pessoal."
-          locked={!isPremium}
-        />
-      </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {isPremium ? (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">evolução salarial</CardTitle>
+              <CardTitle className="text-base">Evolução salarial</CardTitle>
             </CardHeader>
             <CardContent className="h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -280,13 +299,13 @@ export default function FinancePage() {
             </CardContent>
           </Card>
         ) : (
-          <LockedCard title="evolução salarial" />
+          <LockedCard title="Evolução salarial" />
         )}
 
         {isPremium ? (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Horas normais x extras por mes</CardTitle>
+              <CardTitle className="text-base">Horas normais x extras por mês</CardTitle>
             </CardHeader>
             <CardContent className="h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -303,9 +322,118 @@ export default function FinancePage() {
             </CardContent>
           </Card>
         ) : (
-          <LockedCard title="Horas normais x extras por mes" />
+          <LockedCard title="Horas normais x extras por mês" />
         )}
       </div>
+    </div>
+  );
+}
+
+function TotalHero({
+  totalVal,
+  regularVal,
+  overtimeVal,
+  workedMinutes,
+  overtimeMinutes,
+  periodLabel,
+  isPremium,
+  lockedProps,
+}: {
+  totalVal: Decimal;
+  regularVal: Decimal;
+  overtimeVal: Decimal;
+  workedMinutes: number;
+  overtimeMinutes: number;
+  periodLabel: string;
+  isPremium: boolean;
+  lockedProps: LockedProps;
+}) {
+  const animatedTotal = useCountUp(totalVal.toNumber());
+
+  return (
+    <section
+      aria-labelledby="estimativa-title"
+      className={cn(
+        "grid gap-8 rounded-2xl p-6 ring-1 sm:p-8 lg:grid-cols-[1.3fr_1fr]",
+        isPremium
+          ? "bg-linear-to-br from-primary/10 via-card to-card ring-primary/20"
+          : "cursor-pointer bg-card ring-foreground/10 transition-colors hover:bg-card/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      )}
+      {...lockedProps}
+    >
+      <div>
+        <h2
+          id="estimativa-title"
+          className="flex items-center gap-1.5 text-xs font-medium tracking-wider text-muted-foreground uppercase"
+        >
+          Estimativa total
+          {isPremium ? (
+            <InfoTip
+              label="Estimativa total"
+              text="Soma da estimativa de horas normais com a de horas extras, com base no seu salário e jornada cadastrados — uma previsão para controle pessoal, não substitui sua folha de pagamento oficial."
+            />
+          ) : (
+            <Lock className="size-3.5 text-muted-foreground/60" />
+          )}
+        </h2>
+
+        {isPremium ? (
+          <>
+            <p className="mt-3 text-5xl font-semibold tabular-nums text-primary sm:text-6xl">
+              {formatBRL(new Decimal(animatedTotal.toFixed(2)))}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {periodLabel}: {formatBRL(regularVal)} em horas normais + {formatBRL(overtimeVal)} em horas extras.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mt-3 text-5xl font-semibold text-muted-foreground/60 sm:text-6xl">{MASK}</p>
+            <p className="mt-2 text-sm text-muted-foreground">Disponível nos planos pagos. Toque para ver os planos.</p>
+          </>
+        )}
+      </div>
+
+      <div className="flex flex-col justify-center gap-5">
+        <dl className="grid grid-cols-2 gap-4">
+          <div>
+            <dt className="text-xs text-muted-foreground">Horas trabalhadas</dt>
+            <dd className="mt-1 text-xl font-semibold tabular-nums">
+              {isPremium ? formatMinutesAsHours(workedMinutes) : MASK}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Horas extras</dt>
+            <dd className="mt-1 text-xl font-semibold tabular-nums">
+              {isPremium ? formatMinutesAsHours(overtimeMinutes) : MASK}
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+function Metric({
+  label,
+  value,
+  info,
+  locked,
+}: {
+  label: string;
+  value: string;
+  info: string;
+  locked: boolean;
+}) {
+  return (
+    <div className="px-6 py-5">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        {label}
+        {locked ? <Lock className="size-3.5 text-muted-foreground/60" /> : <InfoTip label={label} text={info} />}
+      </div>
+      <p className={cn("mt-1 text-2xl font-semibold tabular-nums", locked && "text-muted-foreground/60")}>
+        {locked ? MASK : value}
+      </p>
     </div>
   );
 }

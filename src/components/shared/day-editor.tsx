@@ -247,7 +247,7 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
             disabled={!isEditable}
           >
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue placeholder="Selecione uma opção" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="inherit">Usar configuração geral</SelectItem>

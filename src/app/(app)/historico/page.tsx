@@ -6,8 +6,7 @@ import { toast } from "sonner";
 import { Archive, ListFilter, MoreHorizontal, Pencil } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
-import { balanceDisplay } from "@/lib/balance-display";
-import { balanceMinutesOf, computeDay, resolveOvertimeOptions, summarizePeriod, type DayCalculation } from "@/lib/calculation-service";
+import { computeDay, resolveOvertimeOptions, type DayCalculation } from "@/lib/calculation-service";
 import { DayType } from "@/lib/constants";
 import { formatDateBR, iterDates, todayIso, type DateISO } from "@/lib/dates";
 import { formatMinutesAsHours, formatTimeOrPlaceholder } from "@/lib/formatting";
@@ -33,7 +32,6 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { DayEditor } from "@/components/shared/day-editor";
-import { InfoTip } from "@/components/shared/info-tip";
 import { PeriodFilter, rangeForOption, type PeriodOption } from "@/components/shared/period-filter";
 import { ScreenIntro } from "@/components/shared/screen-intro";
 
@@ -124,8 +122,6 @@ export default function HistoryPage() {
     );
   });
   const daysByDate = new Map(days.map((d) => [d.workDate, d]));
-  const summary = summarizePeriod(days, start, end);
-  const periodBalance = balanceDisplay(balanceMinutesOf(summary));
 
   return (
     <div className="space-y-6">
@@ -149,30 +145,6 @@ export default function HistoryPage() {
 
         <TabsContent value="registros" className="space-y-4 pt-4">
           <PeriodFilter value={filter} onChange={setFilter} />
-
-          <div className="grid grid-cols-2 divide-y divide-foreground/10 rounded-2xl bg-card sm:grid-cols-4 sm:divide-x sm:divide-y-0">
-            <SummaryMetric
-              label="Horas trabalhadas"
-              value={formatMinutesAsHours(summary.workedMinutes)}
-              info="Soma de todo o tempo registrado no período filtrado."
-            />
-            <SummaryMetric
-              label="Horas previstas"
-              value={formatMinutesAsHours(summary.expectedMinutes)}
-              info="Soma da carga horária configurada para os dias do período filtrado."
-            />
-            <SummaryMetric
-              label="Saldo de horas do período"
-              value={periodBalance.text}
-              accentClassName={periodBalance.accentClassName}
-              info="Diferença entre horas trabalhadas e previstas no período filtrado — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo)."
-            />
-            <SummaryMetric
-              label="Dias incompletos"
-              value={String(summary.incompleteDaysCount)}
-              info="Dias de trabalho normal no período em que faltou preencher entrada, almoço ou saída."
-            />
-          </div>
 
           <div className="overflow-x-auto rounded-2xl border border-border">
             <Table>
@@ -295,28 +267,6 @@ export default function HistoryPage() {
           {openDate && <DayEditor workDate={openDate} onChanged={() => loadRecords()} />}
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function SummaryMetric({
-  label,
-  value,
-  info,
-  accentClassName,
-}: {
-  label: string;
-  value: string;
-  info: string;
-  accentClassName?: string;
-}) {
-  return (
-    <div className="px-6 py-5">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        {label}
-        <InfoTip label={label} text={info} />
-      </div>
-      <p className={cn("mt-1 text-2xl font-semibold tabular-nums", accentClassName)}>{value}</p>
     </div>
   );
 }

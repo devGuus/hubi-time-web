@@ -3,10 +3,9 @@
 /** Tela de calendario mensal com indicacao visual de status por dia. */
 import { useCallback, useEffect, useState } from "react";
 import type { DayButton } from "react-day-picker";
-import { CalendarDays, Clock, MousePointerClick, Pencil } from "lucide-react";
+import { CalendarDays, MousePointerClick, Pencil } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
-import { balanceDisplay } from "@/lib/balance-display";
 import { DayType } from "@/lib/constants";
 import { formatMinutesAsHours } from "@/lib/formatting";
 import { monthRange, todayIso, toLocalDate, type DateISO } from "@/lib/dates";
@@ -19,7 +18,6 @@ import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DayEditor } from "@/components/shared/day-editor";
-import { InfoTip } from "@/components/shared/info-tip";
 import { ScreenIntro } from "@/components/shared/screen-intro";
 
 const LEGEND = [
@@ -107,11 +105,9 @@ export default function CalendarPage() {
   const [monthCursor, setMonthCursor] = useState(toLocalDate(today));
   const [records, setRecords] = useState<Record<DateISO, WorkRecord>>({});
   const [schedules, setSchedules] = useState<WorkScheduleEntry[]>([]);
-  const [todayRecord, setTodayRecord] = useState<WorkRecord | null>(null);
-  const [todaySchedule, setTodaySchedule] = useState<WorkScheduleEntry | null>(null);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
+    const timer = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(timer);
   }, []);
 
@@ -131,55 +127,11 @@ export default function CalendarPage() {
     setSchedules(scheduleList);
   }, [user, monthCursor]);
 
-  const loadToday = useCallback(async () => {
-    if (!user) return;
-    const supabase = createClient();
-    const workRepository = new WorkRepository(supabase);
-    const scheduleRepository = new ScheduleRepository(supabase);
-    const [record, schedule] = await Promise.all([
-      workRepository.getByDate(user.id, today),
-      scheduleRepository.getEffectiveAt(user.id, today),
-    ]);
-    setTodayRecord(record);
-    setTodaySchedule(schedule);
-  }, [user, today]);
-
   useEffect(() => {
     // busca de dados ao montar/trocar mes - setState acontece apos o await
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadMonth();
   }, [loadMonth]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadToday();
-  }, [loadToday]);
-
-  const todayCalc = todayRecord
-    ? computeDay(
-        {
-          work_date: todayRecord.work_date,
-          entry_time: todayRecord.entry_time,
-          lunch_start: todayRecord.lunch_start,
-          lunch_end: todayRecord.lunch_end,
-          exit_time: todayRecord.exit_time,
-          day_type: todayRecord.day_type as DayType,
-        },
-        todaySchedule
-          ? { weekly_hours: todaySchedule.weeklyHours, standard_entry_time: todaySchedule.standardEntryTime }
-          : null,
-        now,
-        resolveOvertimeOptions(todayRecord.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
-      )
-    : null;
-  const todaySaldo = todayCalc && todaySchedule ? balanceDisplay(todayCalc.balanceMinutes) : null;
-  const todayStatus = !todayCalc
-    ? "--"
-    : todayCalc.isComplete
-      ? "Completo"
-      : todayCalc.isInProgress
-        ? "Em andamento"
-        : "não iniciado";
 
   const byStatus = { complete: [] as Date[], incomplete: [] as Date[], inconsistent: [] as Date[] };
   for (const [dateIso, record] of Object.entries(records)) {
@@ -210,7 +162,6 @@ export default function CalendarPage() {
           { icon: CalendarDays, text: "As cores mostram o status de cada dia: completo, incompleto ou com inconsistência." },
           { icon: MousePointerClick, text: "Passe o mouse sobre um dia para uma prévia rapida das horas trabalhadas." },
           { icon: Pencil, text: "Clique em qualquer dia para editar os horários direto no painel ao lado." },
-          { icon: Clock, text: "No final da tela, acompanhe em tempo real o resumo do dia de hoje." },
         ]}
       />
       <h1 className="text-2xl font-semibold">Calendario</h1>
@@ -246,66 +197,10 @@ export default function CalendarPage() {
 
         <Card className="flex-1">
           <CardContent className="pt-6">
-            <DayEditor
-              key={selectedDate}
-              workDate={selectedDate}
-              onChanged={() => {
-                loadMonth();
-                loadToday();
-              }}
-            />
+            <DayEditor key={selectedDate} workDate={selectedDate} onChanged={() => loadMonth()} />
           </CardContent>
         </Card>
       </div>
-
-      <section aria-label="Resumo de hoje" className="space-y-3">
-        <h2 className="text-base font-medium">Resumo de hoje</h2>
-        <div className="grid grid-cols-1 divide-y divide-foreground/10 rounded-2xl bg-card sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          <TodayMetric
-            label="Horas trabalhadas ate agora"
-            value={formatMinutesAsHours(todayCalc?.workedMinutes ?? 0)}
-            info="Tempo já registrado hoje a partir da sua entrada. Atualiza sozinho enquanto o dia está em andamento."
-          />
-          <TodayMetric
-            label="Saldo de horas do dia"
-            value={todaySaldo?.text ?? "--"}
-            accentClassName={todaySaldo?.accentClassName}
-            info="Diferença entre o que você já trabalhou hoje e a carga prevista para o dia — é medido em horas, não em dinheiro. Positivo (+) é hora a mais; negativo (−) é hora que falta."
-          />
-          <TodayMetric
-            label="Situacao do registro"
-            value={todayStatus}
-            info="Mostra se hoje está completo (entrada, almoço e saída preenchidos), em andamento, ou se você ainda não bateu o ponto."
-          />
-        </div>
-        {!todaySchedule && (
-          <p className="text-sm text-muted-foreground">
-            Nenhuma carga horaria configurada ainda. Defina em Configuracoes para ver o saldo de horas previsto.
-          </p>
-        )}
-      </section>
-    </div>
-  );
-}
-
-function TodayMetric({
-  label,
-  value,
-  info,
-  accentClassName,
-}: {
-  label: string;
-  value: string;
-  info: string;
-  accentClassName?: string;
-}) {
-  return (
-    <div className="px-6 py-5">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        {label}
-        <InfoTip label={label} text={info} />
-      </div>
-      <p className={`mt-1 text-2xl font-semibold tabular-nums ${accentClassName ?? ""}`}>{value}</p>
     </div>
   );
 }
