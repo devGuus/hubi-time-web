@@ -29,12 +29,14 @@ import {
 } from "@/lib/import-service";
 import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-repository";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScreenIntro } from "@/components/shared/screen-intro";
+import { StepBadge } from "@/components/shared/step-badge";
 
 type RowStatus = "novo" | "conflito" | "erro";
 
@@ -68,6 +70,7 @@ export default function ImportPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [summary, setSummary] = useState<{ created: number; updated: number; skipped: number } | null>(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const counts = useMemo(() => {
     return {
@@ -179,7 +182,9 @@ export default function ImportPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">1. Formato esperado</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <StepBadge step={1} /> Formato esperado
+          </CardTitle>
           <CardDescription>
             O arquivo deve ter uma linha de cabecalho e uma linha por dia, com estas colunas:
           </CardDescription>
@@ -221,7 +226,9 @@ export default function ImportPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">2. Enviar arquivo</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <StepBadge step={2} /> Enviar arquivo
+          </CardTitle>
           <CardDescription>Aceita .csv, .txt (mesmo formato) ou .xlsx.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -235,25 +242,51 @@ export default function ImportPage() {
               if (file) handleFileSelected(file);
             }}
           />
-          <Button onClick={() => fileInputRef.current?.click()} disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="size-4 animate-spin" /> Lendo arquivo...
-              </>
-            ) : (
-              <>
-                <FileUp className="size-4" /> Escolher arquivo
-              </>
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragActive(true);
+            }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragActive(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file) handleFileSelected(file);
+            }}
+            className={cn(
+              "flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-8 text-center transition-colors",
+              dragActive ? "border-primary bg-primary/5" : "border-border hover:border-foreground/30"
             )}
-          </Button>
-          {fileName && <p className="mt-2 text-sm text-muted-foreground">Arquivo: {fileName}</p>}
+          >
+            {loading ? (
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            ) : (
+              <FileUp className="size-6 text-muted-foreground" />
+            )}
+            <p className="text-sm font-medium">
+              {loading ? "Lendo arquivo..." : "Arraste o arquivo aqui ou clique para escolher"}
+            </p>
+            {fileName && <p className="text-sm text-muted-foreground">Arquivo: {fileName}</p>}
+          </div>
         </CardContent>
       </Card>
 
       {rows.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">3. Revisar e confirmar</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <StepBadge step={3} /> Revisar e confirmar
+            </CardTitle>
             <CardDescription>
               {counts.novo} novo(s), {counts.conflito} data(s) já existente(s), {counts.erro} com erro (serão
               ignoradas).
@@ -272,7 +305,7 @@ export default function ImportPage() {
               </div>
             )}
 
-            <div className="max-h-[28rem] overflow-y-auto rounded-lg border border-border">
+            <div className="max-h-[28rem] overflow-y-auto rounded-2xl border border-border">
               <Table>
                 <TableHeader>
                   <TableRow>

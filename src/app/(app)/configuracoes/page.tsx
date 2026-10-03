@@ -251,7 +251,7 @@ function SubscriptionCard() {
           {Object.values(PAID_PLANS).map((plan) => {
             const savings = savingsVsMonthly(plan);
             return (
-              <div key={plan.id} className="flex flex-col gap-1 rounded-lg border border-border p-4">
+              <div key={plan.id} className="flex flex-col gap-1 rounded-2xl border border-border p-4">
                 <div className="font-medium">{plan.label}</div>
                 <div className="text-2xl font-semibold tabular-nums">{formatBRL(plan.price)}</div>
                 <div className="text-xs text-muted-foreground">
@@ -269,7 +269,7 @@ function SubscriptionCard() {
           })}
         </div>
 
-        <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <div className="rounded-2xl border border-border bg-muted/30 p-4">
           <div className="mb-3 text-sm font-medium">Tudo que o Premium desbloqueia</div>
           <ul className="grid gap-2 text-sm sm:grid-cols-2">
             {PREMIUM_FEATURES.map((feature) => (

@@ -23,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PeriodFilter, rangeForOption, type PeriodOption } from "@/components/shared/period-filter";
 import { ScreenIntro } from "@/components/shared/screen-intro";
+import { StepBadge } from "@/components/shared/step-badge";
 
 type ReportType = "work" | "finance";
 type ExportFormat = "xlsx" | "csv" | "pdf";
@@ -200,78 +201,85 @@ export default function ReportsPage() {
         title="Relatorios"
         description="Exporte seus dados para usar fora do app."
         tips={[
-          { icon: FileSpreadsheet, text: "Siga os 3 passos abaixo: periodo, conteudo e formato." },
+          { icon: FileSpreadsheet, text: "Configure o relatorio e escolha o formato de exportacao." },
           { icon: Check, text: "No relatorio de jornada, escolha exatamente quais colunas quer no arquivo." },
         ]}
       />
       <h1 className="text-2xl font-semibold">Relatorios</h1>
 
-      <StepSection step={1} title="Escolha o período">
-        <PeriodFilter value={filter} onChange={setFilter} />
-      </StepSection>
-
-      <StepSection step={2} title="Escolha o conteúdo">
-        <div className="flex items-center gap-2">
-          <Select value={reportType} onValueChange={(v) => setReportType(v as ReportType)}>
-            <SelectTrigger className="w-56">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="work">Registros de jornada</SelectItem>
-              <SelectItem value="finance">Financeiro</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {reportType === "work" ? (
-          <div className="space-y-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Data</span> sempre entra. Toque para incluir ou tirar
-                as demais colunas ({selectedColumns.size} de {ALL_TOGGLEABLE_KEYS.length} selecionadas).
-              </p>
-              <div className="flex gap-3 text-xs">
-                <button
-                  type="button"
-                  className="font-medium text-primary hover:underline"
-                  onClick={() => setSelectedColumns(new Set(ALL_TOGGLEABLE_KEYS))}
-                >
-                  Selecionar todas
-                </button>
-                <button
-                  type="button"
-                  className="font-medium text-muted-foreground hover:underline"
-                  onClick={() => setSelectedColumns(new Set())}
-                >
-                  Limpar
-                </button>
-              </div>
-            </div>
-            {WORK_COLUMN_GROUPS.map((group) => (
-              <div key={group.title} className="space-y-2">
-                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{group.title}</p>
-                <div className="flex flex-wrap gap-2">
-                  {group.columns.map((col) => (
-                    <ColumnChip
-                      key={col.key}
-                      label={col.label}
-                      selected={selectedColumns.has(col.key)}
-                      onToggle={() => toggleColumn(col.key)}
-                    />
-                  ))}
+      <StepSection step={1} title="Escolha o período e o conteúdo">
+        <div className="grid gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="order-2 min-w-0 space-y-4 lg:order-1">
+            {reportType === "work" ? (
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Data</span> sempre entra. Toque para incluir ou tirar
+                    as demais colunas ({selectedColumns.size} de {ALL_TOGGLEABLE_KEYS.length} selecionadas).
+                  </p>
+                  <div className="flex gap-3 text-xs">
+                    <button
+                      type="button"
+                      className="font-medium text-primary hover:underline"
+                      onClick={() => setSelectedColumns(new Set(ALL_TOGGLEABLE_KEYS))}
+                    >
+                      Selecionar todas
+                    </button>
+                    <button
+                      type="button"
+                      className="font-medium text-muted-foreground hover:underline"
+                      onClick={() => setSelectedColumns(new Set())}
+                    >
+                      Limpar
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+                {WORK_COLUMN_GROUPS.map((group) => (
+                  <div key={group.title} className="space-y-2">
+                    <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{group.title}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {group.columns.map((col) => (
+                        <ColumnChip
+                          key={col.key}
+                          label={col.label}
+                          selected={selectedColumns.has(col.key)}
+                          onToggle={() => toggleColumn(col.key)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Inclui: período, horas normais, horas extras, valor da hora e os valores estimados (normal, extra e
+                total) — um resumo, não um registro dia a dia.
+              </p>
+            )}
           </div>
-        ) : (
-          <p className="rounded-xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10">
-            Inclui: período, horas normais, horas extras, valor da hora e os valores estimados (normal, extra e
-            total) — um resumo, não um registro dia a dia.
-          </p>
-        )}
+
+          <div className="order-1 space-y-4 lg:order-2">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Escolha o período</p>
+              <PeriodFilter value={filter} onChange={setFilter} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Escolha o conteúdo</p>
+              <Select value={reportType} onValueChange={(v) => setReportType(v as ReportType)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="work">Registros de jornada</SelectItem>
+                  <SelectItem value="finance">Financeiro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
       </StepSection>
 
-      <StepSection step={3} title="Exporte">
+      <StepSection step={2} title="Exporte">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {FORMATS.map(({ format, label, description, icon: Icon }) => {
             const isLoading = loadingFormat === format;
@@ -315,9 +323,7 @@ function StepSection({ step, title, children }: { step: number; title: string; c
   return (
     <section className="space-y-3">
       <h2 className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-          {step}
-        </span>
+        <StepBadge step={step} />
         {title}
       </h2>
       {children}
