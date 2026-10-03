@@ -56,8 +56,8 @@ const NOTIFICATION_LABELS: Record<string, string> = {
 };
 
 const PREMIUM_FEATURES = [
-  "Indicadores e saldo completos em Controle de Horas e Banco de Horas",
-  "Indicadores financeiros completos (salario, hora extra, saldo)",
+  "Indicadores e saldo de horas completos em Controle de Horas e Banco de Horas",
+  "Indicadores financeiros completos (salario, hora extra, saldo de horas)",
   "Gráficos de evolução (banco de horas, salario, horas trabalhadas, previsto e realizado)",
   "Exportação de relatórios",
   "Importação de registros em lote",
@@ -599,7 +599,7 @@ function SalaryCard({ userId }: { userId: string }) {
             />
             <p className="max-w-56 text-xs text-muted-foreground">
               {suggestedMonthlyHours
-                ? `Calculado pela sua jornada (${suggestedMonthlyHours / 5}h/semana). não e a soma de horas do mes - e o divisor legal (44h/sem = 220, 40h = 200, 36h = 180).`
+                ? `44h/sem = 220, 40h/sem = 200, 36h/sem = 180`
                 : "Divisor legal, não a soma de horas do mes (44h/sem = 220, 40h = 200, 36h = 180). Configure a jornada acima para calcular sozinho."}
             </p>
           </div>

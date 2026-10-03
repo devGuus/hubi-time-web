@@ -210,7 +210,7 @@ export default function FinancePage() {
           label="Horas extras"
           value={formatMinutesAsHours(overtimeMinutes)}
           icon={Flame}
-          info="Soma só dos dias em que você trabalhou além do previsto. Diferente do Saldo: aqui um dia com falta não desconta um dia com hora extra — cada dia conta separado, como manda a CLT."
+          info="Soma só dos dias em que você trabalhou além do previsto. Diferente do Saldo de horas: aqui um dia com falta não desconta um dia com hora extra — cada dia conta separado, como manda a CLT."
           locked={!isPremium}
         />
       </div>

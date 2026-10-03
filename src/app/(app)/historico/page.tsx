@@ -139,7 +139,7 @@ export default function HistoryPage() {
                   <TableHead>Saida</TableHead>
                   <TableHead>Trabalhadas</TableHead>
                   <TableHead className="hidden md:table-cell">Previstas</TableHead>
-                  <TableHead>Saldo</TableHead>
+                  <TableHead>Saldo (h)</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>

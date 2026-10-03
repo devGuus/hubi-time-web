@@ -120,9 +120,9 @@ export default function BankOfHoursPage() {
       <ScreenIntro
         screenKey="banco-horas"
         title="Banco de Horas"
-        description="Seu saldo acumulado ao longo do tempo."
+        description="Seu saldo de horas acumulado ao longo do tempo."
         tips={[
-          { icon: PiggyBank, text: "Veja o saldo do dia, da semana, do mes, do ano e o total acumulado." },
+          { icon: PiggyBank, text: "Veja o saldo de horas do dia, da semana, do mes, do ano e o total acumulado." },
           { icon: TrendingUp, text: "O grafico mostra a evolução do seu banco de horas no periodo escolhido." },
           { icon: SlidersHorizontal, text: "Troque o periodo (mes, ano ou últimos 12 meses) no seletor no topo." },
         ]}
@@ -143,21 +143,21 @@ export default function BankOfHoursPage() {
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
         <StatCard
-          label="Saldo do dia"
+          label="Saldo de horas do dia"
           value={dailyBalance.text}
           icon={dailyBalance.icon}
           accentClassName={dailyBalance.accentClassName}
           info="Diferença entre horas trabalhadas e previstas hoje — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
         />
         <StatCard
-          label="Saldo da semana"
+          label="Saldo de horas da semana"
           value={weeklyBalance.text}
           icon={weeklyBalance.icon}
           accentClassName={weeklyBalance.accentClassName}
           info="Diferença entre horas trabalhadas e previstas na semana atual — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
         />
         <StatCard
-          label="Saldo do mes"
+          label="Saldo de horas do mes"
           value={monthlyBalance.text}
           icon={monthlyBalance.icon}
           accentClassName={monthlyBalance.accentClassName}
@@ -165,7 +165,7 @@ export default function BankOfHoursPage() {
           locked={!isPremium}
         />
         <StatCard
-          label="Saldo do ano"
+          label="Saldo de horas do ano"
           value={yearlyBalance.text}
           icon={yearlyBalance.icon}
           accentClassName={yearlyBalance.accentClassName}
@@ -173,7 +173,7 @@ export default function BankOfHoursPage() {
           locked={!isPremium}
         />
         <StatCard
-          label="Saldo acumulado"
+          label="Saldo de horas acumulado"
           value={accumulatedBalance.text}
           caption="Periodo selecionado"
           icon={accumulatedBalance.icon}

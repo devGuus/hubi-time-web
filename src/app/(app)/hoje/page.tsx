@@ -72,7 +72,7 @@ export default function TodayPage() {
         description="Esta e a tela Hoje: sua visao rapida do dia atual."
         tips={[
           { icon: Clock, text: "Acompanhe em tempo real quantas horas você já trabalhou hoje." },
-          { icon: Scale, text: "Veja o saldo estimado do dia assim que registrar seus horários." },
+          { icon: Scale, text: "Veja o saldo de horas do dia assim que registrar seus horários." },
           { icon: CheckCircle2, text: "Registre entrada, almoço e saida direto aqui embaixo." },
         ]}
       />
@@ -91,7 +91,7 @@ export default function TodayPage() {
           info="Tempo já registrado hoje a partir da sua entrada. Atualiza sozinho enquanto o dia está em andamento."
         />
         <StatCard
-          label="Saldo estimado do dia"
+          label="Saldo de horas do dia"
           value={saldo?.text ?? "--"}
           icon={saldo?.icon ?? Scale}
           accentClassName={saldo?.accentClassName}
@@ -113,7 +113,7 @@ export default function TodayPage() {
 
       {!schedule && (
         <p className="text-sm text-muted-foreground">
-          Nenhuma carga horaria configurada ainda. Defina em Configuracoes para ver o saldo previsto.
+          Nenhuma carga horaria configurada ainda. Defina em Configuracoes para ver o saldo de horas previsto.
         </p>
       )}
     </div>
