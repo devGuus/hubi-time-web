@@ -208,8 +208,12 @@ export function summarizePeriod(
   endDate: DateISO
 ): PeriodSummary {
   const workedDays = days.filter((d) => d.workedMinutes > 0);
+  // Dia sem jornada prevista (ex.: fim de semana) e sem nenhum registro nao e "incompleto".
   const incompleteDays = days.filter(
-    (d) => dayTypeCountsAsExpectedWorkday(d.dayType) && !d.isComplete
+    (d) =>
+      dayTypeCountsAsExpectedWorkday(d.dayType) &&
+      !d.isComplete &&
+      (d.expectedMinutes > 0 || d.workedMinutes > 0 || d.isInProgress)
   );
   return {
     startDate,

@@ -182,6 +182,14 @@ describe("banco de horas", () => {
     expect(summary.workedDaysCount).toBe(1);
     expect(summary.incompleteDaysCount).toBe(1);
   });
+
+  it("dia sem jornada prevista e sem registro nao conta como incompleto", () => {
+    const schedule = makeSchedule({ segunda: 8 });
+    // 2026-09-19 e sabado: sem jornada prevista e sem registro.
+    const days = [computeDay(makeRecord({ work_date: "2026-09-19" }), schedule)];
+    const summary = summarizePeriod(days, "2026-09-19", "2026-09-19");
+    expect(summary.incompleteDaysCount).toBe(0);
+  });
 });
 
 describe("horas extras e salario", () => {
