@@ -598,9 +598,6 @@ function SalaryCard({ userId }: { userId: string }) {
               onChange={(e) => setMonthlyHours(Number(e.target.value))}
             />
             <p className="max-w-56 text-xs text-muted-foreground">
-              {suggestedMonthlyHours
-                ? `44h/sem = 220, 40h/sem = 200, 36h/sem = 180`
-                : "Divisor legal, não a soma de horas do mes (44h/sem = 220, 40h = 200, 36h = 180). Configure a jornada acima para calcular sozinho."}
             </p>
           </div>
           <div className="space-y-1">

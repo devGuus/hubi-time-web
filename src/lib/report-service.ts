@@ -87,7 +87,7 @@ export const WORK_REPORT_HEADERS = [
   "Saida",
   "Horas trabalhadas",
   "Horas previstas",
-  "Saldo",
+  "Saldo (h)",
   "Horas extras",
   "Tipo de dia",
   "Observacoes",

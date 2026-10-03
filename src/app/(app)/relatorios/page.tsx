@@ -1,10 +1,10 @@
 "use client";
 
 /** Tela de relatorios: exportação de jornada e financeiro em Excel/CSV/PDF. */
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Decimal } from "decimal.js";
 import { toast } from "sonner";
-import { Check, FileDown, FileSpreadsheet, FileText, ListFilter, Loader2, type LucideIcon } from "lucide-react";
+import { Check, FileDown, FileSpreadsheet, FileText, Loader2, type LucideIcon } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { computeDay, overtimeValueForPeriod, regularHoursValue, resolveOvertimeOptions, summarizePeriod } from "@/lib/calculation-service";
@@ -18,6 +18,7 @@ import { ScheduleRepository } from "@/lib/repositories/schedule-repository";
 import { hourlyRateOf, SalaryRepository } from "@/lib/repositories/salary-repository";
 import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-repository";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PeriodFilter, rangeForOption, type PeriodOption } from "@/components/shared/period-filter";
@@ -32,6 +33,41 @@ const FORMATS: { format: ExportFormat; label: string; description: string; icon:
   { format: "pdf", label: "PDF", description: "Pronto para impressao", icon: FileDown },
 ];
 
+/** "Data" sempre vai no arquivo - sem ela a linha não se identifica. As demais colunas o usuario escolhe. */
+const MANDATORY_COLUMN = "Data";
+
+const WORK_COLUMN_GROUPS: { title: string; columns: { key: string; label: string }[] }[] = [
+  {
+    title: "Horários do dia",
+    columns: [
+      { key: "Entrada", label: "Entrada" },
+      { key: "Saida almoco", label: "Saída p/ almoço" },
+      { key: "Retorno", label: "Retorno do almoço" },
+      { key: "Saida", label: "Saída" },
+    ],
+  },
+  {
+    title: "Totais calculados",
+    columns: [
+      { key: "Horas trabalhadas", label: "Horas trabalhadas" },
+      { key: "Horas previstas", label: "Horas previstas" },
+      { key: "Saldo (h)", label: "Saldo de horas" },
+      { key: "Horas extras", label: "Horas extras" },
+    ],
+  },
+  {
+    title: "Outras informações",
+    columns: [
+      { key: "Dia da semana", label: "Dia da semana" },
+      { key: "Tipo de dia", label: "Tipo de dia" },
+      { key: "Observacoes", label: "Observações" },
+      { key: "Status", label: "Status" },
+    ],
+  },
+];
+
+const ALL_TOGGLEABLE_KEYS = WORK_COLUMN_GROUPS.flatMap((g) => g.columns.map((c) => c.key));
+
 export default function ReportsPage() {
   const { user, settings } = useAuth();
   const { requirePremium } = usePremiumGate();
@@ -41,8 +77,20 @@ export default function ReportsPage() {
     customEnd: "",
   });
   const [reportType, setReportType] = useState<ReportType>("work");
+  const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set(ALL_TOGGLEABLE_KEYS));
   const [loadingFormat, setLoadingFormat] = useState<ExportFormat | null>(null);
   const [succeededFormat, setSucceededFormat] = useState<ExportFormat | null>(null);
+
+  function toggleColumn(key: string) {
+    setSelectedColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const noColumnsSelected = reportType === "work" && selectedColumns.size === 0;
 
   async function handleExport(format: ExportFormat) {
     if (!user) return;
@@ -81,7 +129,7 @@ export default function ReportsPage() {
       let title: string;
 
       if (reportType === "work") {
-        headers = WORK_REPORT_HEADERS;
+        headers = WORK_REPORT_HEADERS.filter((h) => h === MANDATORY_COLUMN || selectedColumns.has(h));
         title = "Relatorio de Jornada";
         rows = days.map((day) => {
           const record: WorkRecord | undefined = byDate.get(day.workDate);
@@ -94,7 +142,7 @@ export default function ReportsPage() {
             Saida: formatTimeOrPlaceholder(record?.exit_time),
             "Horas trabalhadas": formatMinutesAsHours(day.workedMinutes),
             "Horas previstas": formatMinutesAsHours(day.expectedMinutes),
-            Saldo: formatMinutesAsHours(day.balanceMinutes, true),
+            "Saldo (h)": formatMinutesAsHours(day.balanceMinutes, true),
             "Horas extras": formatMinutesAsHours(Math.max(day.balanceMinutes, 0)),
             "Tipo de dia": DAY_TYPE_LABELS_PT[day.dayType],
             Observacoes: record?.notes ?? "",
@@ -146,66 +194,152 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <ScreenIntro
         screenKey="relatorios"
         title="Relatorios"
         description="Exporte seus dados para usar fora do app."
         tips={[
-          { icon: ListFilter, text: "Escolha o periodo e o tipo de relatorio: jornada ou financeiro." },
-          { icon: FileSpreadsheet, text: "Exporte em Excel, CSV ou PDF com um clique nos cards abaixo." },
+          { icon: FileSpreadsheet, text: "Siga os 3 passos abaixo: periodo, conteudo e formato." },
+          { icon: Check, text: "No relatorio de jornada, escolha exatamente quais colunas quer no arquivo." },
         ]}
       />
       <h1 className="text-2xl font-semibold">Relatorios</h1>
 
-      <PeriodFilter value={filter} onChange={setFilter} />
+      <StepSection step={1} title="Escolha o período">
+        <PeriodFilter value={filter} onChange={setFilter} />
+      </StepSection>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Tipo de relatorio</span>
-        <Select value={reportType} onValueChange={(v) => setReportType(v as ReportType)}>
-          <SelectTrigger className="w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="work">Registros de jornada</SelectItem>
-            <SelectItem value="finance">Financeiro</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <StepSection step={2} title="Escolha o conteúdo">
+        <div className="flex items-center gap-2">
+          <Select value={reportType} onValueChange={(v) => setReportType(v as ReportType)}>
+            <SelectTrigger className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="work">Registros de jornada</SelectItem>
+              <SelectItem value="finance">Financeiro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {FORMATS.map(({ format, label, description, icon: Icon }) => {
-          const isLoading = loadingFormat === format;
-          const isSuccess = succeededFormat === format;
-          const disabled = loadingFormat !== null;
-          return (
-            <Card
-              key={format}
-              interactive={!disabled}
-              onClick={() => !disabled && requirePremium(`Exportar ${label}`, () => handleExport(format))}
-              className={disabled && !isLoading ? "pointer-events-none opacity-50" : undefined}
-            >
-              <CardContent className="flex items-center gap-3 pt-6">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  {isLoading ? (
-                    <Loader2 className="size-5 animate-spin" />
-                  ) : isSuccess ? (
-                    <Check className="size-5 animate-in zoom-in-50 text-success" />
-                  ) : (
-                    <Icon className="size-5" />
-                  )}
-                </span>
-                <div>
-                  <div className="font-medium">
-                    {isLoading ? "Exportando..." : `Exportar ${label}`}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{description}</p>
+        {reportType === "work" ? (
+          <div className="space-y-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Data</span> sempre entra. Toque para incluir ou tirar
+                as demais colunas ({selectedColumns.size} de {ALL_TOGGLEABLE_KEYS.length} selecionadas).
+              </p>
+              <div className="flex gap-3 text-xs">
+                <button
+                  type="button"
+                  className="font-medium text-primary hover:underline"
+                  onClick={() => setSelectedColumns(new Set(ALL_TOGGLEABLE_KEYS))}
+                >
+                  Selecionar todas
+                </button>
+                <button
+                  type="button"
+                  className="font-medium text-muted-foreground hover:underline"
+                  onClick={() => setSelectedColumns(new Set())}
+                >
+                  Limpar
+                </button>
+              </div>
+            </div>
+            {WORK_COLUMN_GROUPS.map((group) => (
+              <div key={group.title} className="space-y-2">
+                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{group.title}</p>
+                <div className="flex flex-wrap gap-2">
+                  {group.columns.map((col) => (
+                    <ColumnChip
+                      key={col.key}
+                      label={col.label}
+                      selected={selectedColumns.has(col.key)}
+                      onToggle={() => toggleColumn(col.key)}
+                    />
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="rounded-xl bg-card p-4 text-sm text-muted-foreground ring-1 ring-foreground/10">
+            Inclui: período, horas normais, horas extras, valor da hora e os valores estimados (normal, extra e
+            total) — um resumo, não um registro dia a dia.
+          </p>
+        )}
+      </StepSection>
+
+      <StepSection step={3} title="Exporte">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {FORMATS.map(({ format, label, description, icon: Icon }) => {
+            const isLoading = loadingFormat === format;
+            const isSuccess = succeededFormat === format;
+            const disabled = loadingFormat !== null || noColumnsSelected;
+            return (
+              <Card
+                key={format}
+                interactive={!disabled}
+                onClick={() => !disabled && requirePremium(`Exportar ${label}`, () => handleExport(format))}
+                className={disabled && !isLoading ? "pointer-events-none opacity-50" : undefined}
+              >
+                <CardContent className="flex items-center gap-3 pt-6">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    {isLoading ? (
+                      <Loader2 className="size-5 animate-spin" />
+                    ) : isSuccess ? (
+                      <Check className="size-5 animate-in zoom-in-50 text-success" />
+                    ) : (
+                      <Icon className="size-5" />
+                    )}
+                  </span>
+                  <div>
+                    <div className="font-medium">{isLoading ? "Exportando..." : `Exportar ${label}`}</div>
+                    <p className="text-xs text-muted-foreground">{description}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+        {noColumnsSelected && (
+          <p className="text-sm text-warning">Selecione ao menos uma coluna no passo 2 para poder exportar.</p>
+        )}
+      </StepSection>
     </div>
+  );
+}
+
+function StepSection({ step, title, children }: { step: number; title: string; children: ReactNode }) {
+  return (
+    <section className="space-y-3">
+      <h2 className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+          {step}
+        </span>
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function ColumnChip({ label, selected, onToggle }: { label: string; selected: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={selected}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors",
+        selected
+          ? "border-primary bg-primary/10 text-primary"
+          : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+      )}
+    >
+      {selected && <Check className="size-3.5" />}
+      {label}
+    </button>
   );
 }
