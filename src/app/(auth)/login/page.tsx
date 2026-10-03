@@ -39,7 +39,7 @@ export default function LoginPage() {
     setServerError(null);
     try {
       await signIn(values.email, values.password);
-      router.push("/hoje");
+      router.push("/calendario");
     } catch (error) {
       setServerError(
         error instanceof AuthenticationError

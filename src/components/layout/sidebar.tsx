@@ -8,7 +8,6 @@ import {
   Calendar,
   FileText,
   History,
-  Home,
   PiggyBank,
   Settings,
   Upload,
@@ -19,7 +18,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/hoje", label: "Hoje", icon: Home },
   { href: "/calendario", label: "Calendário", icon: Calendar },
   { href: "/historico", label: "Histórico", icon: History },
   { href: "/controle-horas", label: "Controle de Horas", icon: BarChart3 },

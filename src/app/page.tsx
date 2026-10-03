@@ -1,5 +1,5 @@
 /**
- * O proxy (src/proxy.ts) sempre redireciona "/" para /hoje ou /login antes
+ * O proxy (src/proxy.ts) sempre redireciona "/" para /calendario ou /login antes
  * de chegar aqui. Este fallback so aparece em cenarios de borda (proxy não
  * executado ainda).
  */

@@ -50,7 +50,7 @@ export default function VerifyEmailPage() {
     try {
       await verifySignupOtp(email, value);
       sessionStorage.removeItem(PENDING_VERIFICATION_EMAIL_KEY);
-      router.push("/hoje");
+      router.push("/calendario");
     } catch (err) {
       setCode("");
       setError(

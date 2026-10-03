@@ -40,7 +40,7 @@ export async function proxy(request: NextRequest) {
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
 
   if (pathname === "/") {
-    return NextResponse.redirect(new URL(user ? "/hoje" : "/login", request.url));
+    return NextResponse.redirect(new URL(user ? "/calendario" : "/login", request.url));
   }
 
   if (!user && !isPublicRoute) {
@@ -48,7 +48,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (user && isPublicRoute) {
-    return NextResponse.redirect(new URL("/hoje", request.url));
+    return NextResponse.redirect(new URL("/calendario", request.url));
   }
 
   return response;
