@@ -25,6 +25,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
+import { LockedCard } from "@/components/shared/locked-card";
 import { ScreenIntro } from "@/components/shared/screen-intro";
 import { StatCard } from "@/components/shared/stat-card";
 
@@ -39,7 +40,7 @@ function rangeFor(period: ChartPeriod): [DateISO, DateISO] {
 }
 
 export default function BankOfHoursPage() {
-  const { user, settings } = useAuth();
+  const { user, settings, isPremium } = useAuth();
   const [now, setNow] = useState(new Date());
   const [period, setPeriod] = useState<ChartPeriod>("year");
   const [records, setRecords] = useState<WorkRecord[]>([]);
@@ -161,6 +162,7 @@ export default function BankOfHoursPage() {
           icon={monthlyBalance.icon}
           accentClassName={monthlyBalance.accentClassName}
           info="Diferença entre horas trabalhadas e previstas no mês atual — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
+          locked={!isPremium}
         />
         <StatCard
           label="Saldo do ano"
@@ -168,6 +170,7 @@ export default function BankOfHoursPage() {
           icon={yearlyBalance.icon}
           accentClassName={yearlyBalance.accentClassName}
           info="Diferença entre horas trabalhadas e previstas no ano atual — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
+          locked={!isPremium}
         />
         <StatCard
           label="Saldo acumulado"
@@ -176,39 +179,44 @@ export default function BankOfHoursPage() {
           icon={accumulatedBalance.icon}
           accentClassName={accumulatedBalance.accentClassName}
           info="Diferença entre horas trabalhadas e previstas no período escolhido no seletor acima — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas; para ver em R$, veja a tela Financeiro."
+          locked={!isPremium}
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">evolução do banco de horas</CardTitle>
-        </CardHeader>
-        <CardContent className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="bancoHorasGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-chart-1)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="var(--color-chart-1)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis dataKey="label" fontSize={12} />
-              <YAxis fontSize={12} />
-              <Tooltip content={ChartTooltipContent} />
-              <Area
-                type="monotone"
-                dataKey="horas"
-                name="Banco de horas (h)"
-                stroke="var(--color-chart-1)"
-                strokeWidth={2}
-                fill="url(#bancoHorasGradient)"
-                animationDuration={600}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      {isPremium ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">evolução do banco de horas</CardTitle>
+          </CardHeader>
+          <CardContent className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="bancoHorasGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-chart-1)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--color-chart-1)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="label" fontSize={12} />
+                <YAxis fontSize={12} />
+                <Tooltip content={ChartTooltipContent} />
+                <Area
+                  type="monotone"
+                  dataKey="horas"
+                  name="Banco de horas (h)"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={2}
+                  fill="url(#bancoHorasGradient)"
+                  animationDuration={600}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      ) : (
+        <LockedCard title="evolução do banco de horas" />
+      )}
     </div>
   );
 }

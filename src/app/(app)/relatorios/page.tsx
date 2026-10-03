@@ -11,6 +11,7 @@ import { computeDay, overtimeValueForPeriod, regularHoursValue, resolveOvertimeO
 import { DayType, DAY_TYPE_LABELS_PT } from "@/lib/constants";
 import { formatDateBR, iterDates, weekdayLabel, type DateISO } from "@/lib/dates";
 import { formatMinutesAsHours, formatTimeOrPlaceholder } from "@/lib/formatting";
+import { usePremiumGate } from "@/lib/hooks/use-premium-gate";
 import { formatBRL } from "@/lib/money";
 import { exportCsv, exportPdf, exportXlsx, FINANCE_REPORT_HEADERS, WORK_REPORT_HEADERS } from "@/lib/report-service";
 import { ScheduleRepository } from "@/lib/repositories/schedule-repository";
@@ -33,6 +34,7 @@ const FORMATS: { format: ExportFormat; label: string; description: string; icon:
 
 export default function ReportsPage() {
   const { user, settings } = useAuth();
+  const { requirePremium } = usePremiumGate();
   const [filter, setFilter] = useState<{ option: PeriodOption; customStart: DateISO; customEnd: DateISO }>({
     option: "month",
     customStart: "",
@@ -180,7 +182,7 @@ export default function ReportsPage() {
             <Card
               key={format}
               interactive={!disabled}
-              onClick={() => !disabled && handleExport(format)}
+              onClick={() => !disabled && requirePremium(`Exportar ${label}`, () => handleExport(format))}
               className={disabled && !isLoading ? "pointer-events-none opacity-50" : undefined}
             >
               <CardContent className="flex items-center gap-3 pt-6">

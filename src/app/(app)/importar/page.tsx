@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/auth/auth-provider";
 import { DAY_TYPE_LABELS_PT } from "@/lib/constants";
 import { formatDateBR } from "@/lib/dates";
 import { formatTimeOrPlaceholder } from "@/lib/formatting";
+import { usePremiumGate } from "@/lib/hooks/use-premium-gate";
 import {
   downloadImportTemplateCsv,
   downloadImportTemplateXlsx,
@@ -59,6 +60,7 @@ function statusOf(row: ParsedImportRow, existingByDate: Map<string, WorkRecord>)
 
 export default function ImportPage() {
   const { user } = useAuth();
+  const { requirePremium } = usePremiumGate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [fileName, setFileName] = useState<string | null>(null);
@@ -326,7 +328,7 @@ export default function ImportPage() {
               </Table>
             </div>
 
-            <Button onClick={handleConfirm} disabled={saving}>
+            <Button onClick={() => requirePremium("Importar registros", handleConfirm)} disabled={saving}>
               {saving ? (
                 <>
                   <Loader2 className="size-4 animate-spin" /> Importando...

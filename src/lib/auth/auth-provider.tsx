@@ -11,11 +11,15 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { createClient } from "@/lib/supabase/client";
 import { translateAuthError, AuthenticationError } from "./errors";
 import { UserRepository, type Profile, type UserSettings } from "@/lib/repositories/user-repository";
+import { isPremium as computeIsPremium, SubscriptionRepository, type Subscription } from "@/lib/repositories/subscription-repository";
+import { todayIso } from "@/lib/dates";
 
 interface AuthContextValue {
   user: User | null;
   profile: Profile | null;
   settings: UserSettings | null;
+  subscription: Subscription | null;
+  isPremium: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
@@ -41,22 +45,26 @@ function wrapAuthError(error: unknown): never {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), []);
   const userRepository = useMemo(() => new UserRepository(supabase), [supabase]);
+  const subscriptionRepository = useMemo(() => new SubscriptionRepository(supabase), [supabase]);
 
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfileAndSettings = useCallback(
     async (userId: string) => {
-      const [profileResult, settingsResult] = await Promise.all([
+      const [profileResult, settingsResult, subscriptionResult] = await Promise.all([
         userRepository.getProfile(userId),
         userRepository.getSettings(userId),
+        subscriptionRepository.getCurrent(userId),
       ]);
       setProfile(profileResult);
       setSettings(settingsResult);
+      setSubscription(subscriptionResult);
     },
-    [userRepository]
+    [userRepository, subscriptionRepository]
   );
 
   useEffect(() => {
@@ -82,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === "SIGNED_OUT") {
         setProfile(null);
         setSettings(null);
+        setSubscription(null);
       }
       if (session?.user && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
         try {
@@ -170,6 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setProfile(null);
     setSettings(null);
+    setSubscription(null);
   }, [supabase]);
 
   const refreshProfile = useCallback(async () => {
@@ -194,6 +204,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     profile,
     settings,
+    subscription,
+    isPremium: computeIsPremium(subscription, todayIso()),
     loading,
     signIn,
     signUp,

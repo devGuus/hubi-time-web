@@ -10,13 +10,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { Decimal } from "decimal.js";
 import { useTheme } from "next-themes";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Clock, Pencil, SlidersHorizontal, Trash2, Wallet, X } from "lucide-react";
+import { BadgeCheck, Check, Clock, Pencil, SlidersHorizontal, Trash2, Wallet, X } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { DEFAULT_WEEKLY_HOURS, WEEKDAY_KEYS, WEEKDAY_LABELS_PT, type WeekdayKey } from "@/lib/constants";
 import { formatDateBR, todayIso } from "@/lib/dates";
 import { formatBRL, parseBRL } from "@/lib/money";
+import { monthlyEquivalent, PAID_PLANS, savingsVsMonthly, type PaidPlanId } from "@/lib/plans";
 import { ScheduleRepository, type WorkScheduleEntry } from "@/lib/repositories/schedule-repository";
 import {
   hourlyRateOf,
@@ -52,6 +54,14 @@ const NOTIFICATION_LABELS: Record<string, string> = {
   time_inconsistency: "Avisar sobre horários inconsistentes",
   incomplete_month: "Avisar sobre registros incompletos no mes",
 };
+
+const PREMIUM_FEATURES = [
+  "Indicadores e saldo completos em Controle de Horas e Banco de Horas",
+  "Indicadores financeiros completos (salario, hora extra, saldo)",
+  "Gráficos de evolução (banco de horas, salario, horas trabalhadas, previsto e realizado)",
+  "Exportação de relatórios",
+  "Importação de registros em lote",
+];
 
 /** Botao de excluir com confirmacao - reutilizado nas 3 listas de vigência abaixo. */
 function ConfirmDeleteButton({ itemLabel, onConfirm }: { itemLabel: string; onConfirm: () => void }) {
@@ -106,6 +116,7 @@ export default function SettingsPage() {
           <TabsTrigger value="preferências">preferências</TabsTrigger>
           <TabsTrigger value="jornada">Jornada</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+          <TabsTrigger value="assinatura">Assinatura</TabsTrigger>
         </TabsList>
 
         <TabsContent value="preferências" className="space-y-6 pt-4">
@@ -183,6 +194,10 @@ export default function SettingsPage() {
           {user && <SalaryCard userId={user.id} />}
           {user && <OvertimeRulesCard userId={user.id} />}
         </TabsContent>
+
+        <TabsContent value="assinatura" className="space-y-6 pt-4">
+          <SubscriptionCard />
+        </TabsContent>
       </Tabs>
     </div>
   );
@@ -190,6 +205,100 @@ export default function SettingsPage() {
 
 function emptySchedule(): Record<WeekdayKey, number> {
   return { ...DEFAULT_WEEKLY_HOURS };
+}
+
+function SubscriptionCard() {
+  const { subscription, isPremium, refreshProfile } = useAuth();
+  const searchParams = useSearchParams();
+  const [loadingPlan, setLoadingPlan] = useState<PaidPlanId | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("assinatura")) refreshProfile().catch(() => {});
+  }, [searchParams, refreshProfile]);
+
+  async function handleSubscribe(plan: PaidPlanId) {
+    setLoadingPlan(plan);
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Erro ao iniciar pagamento.");
+      window.location.assign(data.initPoint);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao iniciar pagamento.");
+      setLoadingPlan(null);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-1.5 text-base">
+          Seu plano
+          {isPremium && <BadgeCheck className="size-4 text-success" />}
+        </CardTitle>
+        <CardDescription>
+          {isPremium && subscription?.currentPeriodEnd
+            ? `Plano ${PAID_PLANS[subscription.plan as PaidPlanId]?.label ?? subscription.plan} ativo ate ${formatDateBR(subscription.currentPeriodEnd)}.`
+            : "Voce esta no plano Free. Assine para desbloquear relatorios, importacao, financeiro e os indicadores completos."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-3 sm:grid-cols-3">
+          {Object.values(PAID_PLANS).map((plan) => {
+            const savings = savingsVsMonthly(plan);
+            return (
+              <div key={plan.id} className="flex flex-col gap-1 rounded-lg border border-border p-4">
+                <div className="font-medium">{plan.label}</div>
+                <div className="text-2xl font-semibold tabular-nums">{formatBRL(plan.price)}</div>
+                <div className="text-xs text-muted-foreground">
+                  {plan.periodMonths === 1
+                    ? "cobrado todo mes"
+                    : `equivalente a ${formatBRL(monthlyEquivalent(plan))}/mes`}
+                </div>
+                {savings && (
+                  <span className="mt-1 inline-flex w-fit items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                    Economize {formatBRL(savings.amount)} ({savings.percent}% de desconto)
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="rounded-lg border border-border bg-muted/30 p-4">
+          <div className="mb-3 text-sm font-medium">Tudo que o Premium desbloqueia</div>
+          <ul className="grid gap-2 text-sm sm:grid-cols-2">
+            {PREMIUM_FEATURES.map((feature) => (
+              <li key={feature} className="flex items-start gap-2">
+                <Check className="mt-0.5 size-4 shrink-0 text-success" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {Object.values(PAID_PLANS).map((plan) => {
+            const isCurrent = isPremium && subscription?.plan === plan.id;
+            return (
+              <Button
+                key={plan.id}
+                variant={isCurrent ? "outline" : "default"}
+                disabled={loadingPlan !== null || isCurrent}
+                onClick={() => handleSubscribe(plan.id)}
+              >
+                {loadingPlan === plan.id ? "Redirecionando..." : isCurrent ? "Plano atual" : `Assinar ${plan.label}`}
+              </Button>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 function ScheduleCard({ userId }: { userId: string }) {

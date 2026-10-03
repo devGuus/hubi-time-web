@@ -346,6 +346,75 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          mercadopago_payer_id: string | null
+          mercadopago_preference_id: string | null
+          plan: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          mercadopago_payer_id?: string | null
+          mercadopago_preference_id?: string | null
+          plan?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          mercadopago_payer_id?: string | null
+          mercadopago_preference_id?: string | null
+          plan?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          mercadopago_payment_id: string
+          payment_method: string | null
+          plan: string
+          raw_payload: Json | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          mercadopago_payment_id: string
+          payment_method?: string | null
+          plan: string
+          raw_payload?: Json | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          mercadopago_payment_id?: string
+          payment_method?: string | null
+          plan?: string
+          raw_payload?: Json | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

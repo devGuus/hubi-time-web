@@ -1,8 +1,9 @@
 "use client";
 
-import { TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
+import { Lock, TrendingDown, TrendingUp, type LucideIcon } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePremiumGate } from "@/lib/hooks/use-premium-gate";
 import { useCountUp } from "@/lib/hooks/use-count-up";
 import { cn } from "@/lib/utils";
 import { InfoTip } from "./info-tip";
@@ -23,6 +24,8 @@ interface StatCardProps {
   numericValue?: number;
   formatValue?: (n: number) => string;
   info?: string;
+  /** Quando true, mostra o valor mascarado e explica que e recurso pago ao tocar/clicar. */
+  locked?: boolean;
 }
 
 export function StatCard({
@@ -35,16 +38,19 @@ export function StatCard({
   numericValue,
   formatValue,
   info,
+  locked,
 }: StatCardProps) {
   const animated = useCountUp(numericValue ?? 0);
-  const displayValue = numericValue !== undefined && formatValue ? formatValue(animated) : value;
+  const computedValue = numericValue !== undefined && formatValue ? formatValue(animated) : value;
+  const displayValue = locked ? "••••••" : computedValue;
+  const { requirePremium } = usePremiumGate();
 
   return (
-    <Card interactive>
+    <Card interactive onClick={locked ? () => requirePremium(label, () => {}) : undefined}>
       <CardHeader className="flex-row items-start justify-between pb-2">
         <CardTitle className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
           {label}
-          {info && <InfoTip label={label} text={info} />}
+          {locked ? <Lock className="size-3.5 text-muted-foreground/60" /> : info && <InfoTip label={label} text={info} />}
         </CardTitle>
         {Icon && (
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -54,8 +60,10 @@ export function StatCard({
       </CardHeader>
       <CardContent>
         <div className="flex items-baseline gap-2">
-          <div className={cn("text-2xl font-semibold tabular-nums", accentClassName)}>{displayValue}</div>
-          {trend && (
+          <div className={cn("text-2xl font-semibold tabular-nums", locked ? "text-muted-foreground/60" : accentClassName)}>
+            {displayValue}
+          </div>
+          {trend && !locked && (
             <span
               className={cn(
                 "flex items-center gap-0.5 text-xs font-medium",

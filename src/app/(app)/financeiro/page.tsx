@@ -35,6 +35,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChartTooltipContent } from "@/components/shared/chart-tooltip";
+import { LockedCard } from "@/components/shared/locked-card";
 import { ScreenIntro } from "@/components/shared/screen-intro";
 import { StatCard } from "@/components/shared/stat-card";
 
@@ -56,7 +57,7 @@ function rangeFor(option: PeriodOption): [DateISO, DateISO] {
 }
 
 export default function FinancePage() {
-  const { user, settings } = useAuth();
+  const { user, settings, isPremium } = useAuth();
   const [now, setNow] = useState(new Date());
   const [period, setPeriod] = useState<PeriodOption>("month");
   const [records, setRecords] = useState<WorkRecord[]>([]);
@@ -189,24 +190,28 @@ export default function FinancePage() {
           value={currentSalary ? formatBRL(currentSalary.salary) : "não configurado"}
           icon={Wallet}
           info="Valor do salário cadastrado que está em vigor hoje, conforme o histórico em Configurações."
+          locked={!isPremium}
         />
         <StatCard
           label="Valor estimado da hora"
           value={currentSalary ? formatBRL(hourlyRate) : "--"}
           icon={Coins}
           info="Salário mensal dividido pela carga mensal de horas (o 'divisor') — mesmo método usado em folhas de pagamento no Brasil."
+          locked={!isPremium}
         />
         <StatCard
           label="Horas trabalhadas"
           value={formatMinutesAsHours(summary.workedMinutes)}
           icon={Timer}
           info="Soma de todo o tempo registrado no período, incluindo horas extras."
+          locked={!isPremium}
         />
         <StatCard
           label="Horas extras"
           value={formatMinutesAsHours(overtimeMinutes)}
           icon={Flame}
           info="Soma só dos dias em que você trabalhou além do previsto. Diferente do Saldo: aqui um dia com falta não desconta um dia com hora extra — cada dia conta separado, como manda a CLT."
+          locked={!isPremium}
         />
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -216,18 +221,21 @@ export default function FinancePage() {
           icon={periodBalance.icon}
           accentClassName={periodBalance.accentClassName}
           info="Diferença entre horas trabalhadas e previstas no período escolhido acima — pode ser positivo (trabalhou a mais) ou negativo (ficou devendo). Sempre em horas."
+          locked={!isPremium}
         />
         <StatCard
           label="Estimativa horas normais"
           value={formatBRL(regularVal)}
           icon={Calculator}
           info="Valor estimado das horas dentro da jornada normal, ao preço da sua hora atual."
+          locked={!isPremium}
         />
         <StatCard
           label="Estimativa horas extras"
           value={formatBRL(overtimeVal)}
           icon={BadgeDollarSign}
           info="Valor estimado das horas extras, já com o adicional legal (mínimo 50% em dias normais, 100% aos domingos e feriados, pela CLT)."
+          locked={!isPremium}
         />
         <StatCard
           label="Estimativa total"
@@ -235,59 +243,68 @@ export default function FinancePage() {
           icon={TrendingUp}
           accentClassName="text-primary"
           info="Soma da estimativa de horas normais com a de horas extras — previsão de quanto seu trabalho no período valeria, para controle pessoal."
+          locked={!isPremium}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">evolução salarial</CardTitle>
-          </CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={salaryChartData}>
-                <defs>
-                  <linearGradient id="salarioGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-chart-1)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="var(--color-chart-1)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="label" fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip content={ChartTooltipContent} />
-                <Area
-                  type="monotone"
-                  dataKey="salario"
-                  name="Salario (R$)"
-                  stroke="var(--color-chart-1)"
-                  strokeWidth={2}
-                  fill="url(#salarioGradient)"
-                  animationDuration={600}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {isPremium ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">evolução salarial</CardTitle>
+            </CardHeader>
+            <CardContent className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={salaryChartData}>
+                  <defs>
+                    <linearGradient id="salarioGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-chart-1)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--color-chart-1)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="label" fontSize={12} />
+                  <YAxis fontSize={12} />
+                  <Tooltip content={ChartTooltipContent} />
+                  <Area
+                    type="monotone"
+                    dataKey="salario"
+                    name="Salario (R$)"
+                    stroke="var(--color-chart-1)"
+                    strokeWidth={2}
+                    fill="url(#salarioGradient)"
+                    animationDuration={600}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        ) : (
+          <LockedCard title="evolução salarial" />
+        )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Horas normais x extras por mes</CardTitle>
-          </CardHeader>
-          <CardContent className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthsChartData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis dataKey="label" fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip content={ChartTooltipContent} cursor={{ fill: "var(--muted)" }} />
-                <Legend />
-                <Bar dataKey="normais" name="Normais (h)" fill="var(--color-chart-2)" radius={4} animationDuration={500} />
-                <Bar dataKey="extras" name="Extras (h)" fill="var(--color-chart-1)" radius={4} animationDuration={500} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {isPremium ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Horas normais x extras por mes</CardTitle>
+            </CardHeader>
+            <CardContent className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthsChartData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="label" fontSize={12} />
+                  <YAxis fontSize={12} />
+                  <Tooltip content={ChartTooltipContent} cursor={{ fill: "var(--muted)" }} />
+                  <Legend />
+                  <Bar dataKey="normais" name="Normais (h)" fill="var(--color-chart-2)" radius={4} animationDuration={500} />
+                  <Bar dataKey="extras" name="Extras (h)" fill="var(--color-chart-1)" radius={4} animationDuration={500} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        ) : (
+          <LockedCard title="Horas normais x extras por mes" />
+        )}
       </div>
     </div>
   );
