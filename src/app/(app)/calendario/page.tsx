@@ -2,6 +2,7 @@
 
 /** Tela de calendario mensal com indicacao visual de status por dia. */
 import { useCallback, useEffect, useState } from "react";
+import { ptBR } from "date-fns/locale";
 import type { DayButton } from "react-day-picker";
 import { CalendarDays, MousePointerClick, Pencil } from "lucide-react";
 
@@ -10,7 +11,7 @@ import { DayType } from "@/lib/constants";
 import { formatMinutesAsHours } from "@/lib/formatting";
 import { monthRange, todayIso, toLocalDate, type DateISO } from "@/lib/dates";
 import { detectTimeInconsistencies } from "@/lib/validators";
-import { computeDay, resolveOvertimeOptions } from "@/lib/calculation-service";
+import { computeDay } from "@/lib/calculation-service";
 import { ScheduleRepository, type WorkScheduleEntry } from "@/lib/repositories/schedule-repository";
 import { WorkRepository, type WorkRecord } from "@/lib/repositories/work-repository";
 import { createClient } from "@/lib/supabase/client";
@@ -38,13 +39,11 @@ const STATUS_LABEL_PT: Record<"complete" | "incomplete" | "inconsistent", string
 function DayButtonWithPreview({
   recordsByDate,
   schedules,
-  countEarlyArrivalAsOvertime,
   now,
   ...props
 }: React.ComponentProps<typeof DayButton> & {
   recordsByDate: Record<DateISO, WorkRecord>;
   schedules: WorkScheduleEntry[];
-  countEarlyArrivalAsOvertime?: boolean;
   now: Date;
 }) {
   const dateIso = `${props.day.date.getFullYear()}-${(props.day.date.getMonth() + 1).toString().padStart(2, "0")}-${props.day.date.getDate().toString().padStart(2, "0")}`;
@@ -63,8 +62,7 @@ function DayButtonWithPreview({
           day_type: record.day_type as DayType,
         },
         schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
-        now,
-        resolveOvertimeOptions(record.count_early_arrival_as_overtime, countEarlyArrivalAsOvertime)
+        now
       )
     : null;
 
@@ -98,7 +96,7 @@ function statusOf(record: WorkRecord | undefined): "complete" | "incomplete" | "
 }
 
 export default function CalendarPage() {
-  const { user, settings } = useAuth();
+  const { user } = useAuth();
   const [now, setNow] = useState(new Date());
   const today = todayIso();
   const [selectedDate, setSelectedDate] = useState<DateISO>(today);
@@ -144,12 +142,11 @@ export default function CalendarPage() {
       <DayButtonWithPreview
         recordsByDate={records}
         schedules={schedules}
-        countEarlyArrivalAsOvertime={settings?.count_early_arrival_as_overtime}
         now={now}
         {...props}
       />
     ),
-    [records, schedules, settings?.count_early_arrival_as_overtime, now]
+    [records, schedules, now]
   );
 
   return (
@@ -180,6 +177,7 @@ export default function CalendarPage() {
           <CardContent className="pt-6">
             <Calendar
               mode="single"
+              locale={ptBR}
               selected={toLocalDate(selectedDate)}
               onSelect={(date) => date && setSelectedDate(`${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`)}
               onMonthChange={setMonthCursor}

@@ -18,7 +18,7 @@ import { Lock, PiggyBank, TrendingUp } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
 import { balanceDisplay } from "@/lib/balance-display";
-import { computeDay, resolveOvertimeOptions, runningBalance } from "@/lib/calculation-service";
+import { computeDay, runningBalance } from "@/lib/calculation-service";
 import { DayType } from "@/lib/constants";
 import {
   addMonthsIso,
@@ -56,7 +56,7 @@ function chartRangeFor(period: ChartPeriod): [DateISO, DateISO] {
 }
 
 export default function BankOfHoursPage() {
-  const { user, settings, isPremium } = useAuth();
+  const { user, isPremium } = useAuth();
   const { requirePremium } = usePremiumGate();
   const [now, setNow] = useState(new Date());
   const [period, setPeriod] = useState<ChartPeriod>("year");
@@ -107,11 +107,10 @@ export default function BankOfHoursPage() {
           day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
         },
         schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
-        now,
-        resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
+        now
       );
     });
-  }, [records, schedules, firstRecordDate, today, settings?.count_early_arrival_as_overtime, now]);
+  }, [records, schedules, firstRecordDate, today, now]);
 
   const byDate = new Map(allDays.map((d) => [d.workDate, d]));
   const todayCalc = byDate.get(today);

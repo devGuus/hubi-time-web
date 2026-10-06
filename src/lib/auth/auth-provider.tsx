@@ -31,7 +31,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateSettings: (
-    fields: Partial<Pick<UserSettings, "theme" | "notifications_enabled" | "count_early_arrival_as_overtime">>
+    fields: Partial<Pick<UserSettings, "theme" | "notifications_enabled">>
   ) => Promise<void>;
 }
 
@@ -190,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateSettings = useCallback(
     async (
       fields: Partial<
-        Pick<UserSettings, "theme" | "notifications_enabled" | "count_early_arrival_as_overtime">
+        Pick<UserSettings, "theme" | "notifications_enabled">
       >
     ) => {
       if (!user) return;

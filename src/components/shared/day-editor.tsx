@@ -81,7 +81,6 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
   const [exitTime, setExitTime] = useState<string | null>(null);
   const [dayType, setDayType] = useState<DayType>(DayType.NORMAL);
   const [notes, setNotes] = useState("");
-  const [earlyArrivalOverride, setEarlyArrivalOverride] = useState<boolean | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -95,7 +94,6 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
       setExitTime(found?.exit_time?.slice(0, 5) ?? null);
       setDayType((found?.day_type as DayType) ?? DayType.NORMAL);
       setNotes(found?.notes ?? "");
-      setEarlyArrivalOverride(found?.count_early_arrival_as_overtime ?? null);
       setHistory(null);
       onChanged?.(found);
     } catch (error) {
@@ -131,7 +129,6 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
         exit_time: exitTime,
         day_type: dayType,
         notes: notes.trim() || null,
-        count_early_arrival_as_overtime: earlyArrivalOverride,
       };
       const saved = record
         ? await workRepository.update(record.id, user.id, record.version, payload)
@@ -235,26 +232,6 @@ export function DayEditor({ workDate, onChanged }: DayEditorProps) {
           />
           <TimeField label="Retorno" value={lunchEnd} onChange={setLunchEnd} disabled={!isEditable} />
           <TimeField label="Saida" value={exitTime} onChange={setExitTime} disabled={!isEditable} />
-        </div>
-
-        <div className="max-w-xs space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">
-            Chegada antes do horário conta como hora extra neste dia?
-          </Label>
-          <Select
-            value={earlyArrivalOverride === null ? "inherit" : String(earlyArrivalOverride)}
-            onValueChange={(v) => setEarlyArrivalOverride(v === "inherit" ? null : v === "true")}
-            disabled={!isEditable}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione uma opção" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="inherit">Usar configuração geral</SelectItem>
-              <SelectItem value="true">Sim, contar como hora extra neste dia</SelectItem>
-              <SelectItem value="false">Não contar neste dia</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="max-w-xs space-y-1.5">

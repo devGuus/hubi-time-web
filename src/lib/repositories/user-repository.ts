@@ -57,7 +57,7 @@ export class UserRepository {
     fields: Partial<
       Pick<
         UserSettings,
-        "theme" | "locale" | "notifications_enabled" | "keep_signed_in" | "count_early_arrival_as_overtime"
+        "theme" | "locale" | "notifications_enabled" | "keep_signed_in"
       >
     >
   ): Promise<UserSettings> {

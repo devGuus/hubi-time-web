@@ -8,6 +8,7 @@ import {
   Bot,
   Check,
   CheckCircle2,
+  Download,
   FileSpreadsheet,
   FileUp,
   Loader2,
@@ -173,9 +174,9 @@ export default function ImportPage() {
         title="Importar registros antigos"
         description="Traga anotações de jornada que você já tinha, sem redigitar tudo."
         tips={[
-          { icon: FileSpreadsheet, text: "Baixe o modelo (CSV ou Excel) e preencha com seus dados." },
-          { icon: Bot, text: "anotações bagunçadas? Peca para uma IA reescrever no formato do modelo." },
-          { icon: CheckCircle2, text: "Antes de salvar, você revisa uma prévia e decide o que importar." },
+          { icon: FileSpreadsheet, text: "Baixe o modelo, preencha e envie." },
+          { icon: Bot, text: "Anotações bagunçadas? Uma IA reescreve no formato do modelo." },
+          { icon: CheckCircle2, text: "Você revisa a prévia antes de salvar." },
         ]}
       />
       <h1 className="text-2xl font-semibold">Importar registros</h1>
@@ -183,11 +184,9 @@ export default function ImportPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <StepBadge step={1} /> Formato esperado
+            <StepBadge step={1} /> Prepare o arquivo
           </CardTitle>
-          <CardDescription>
-            O arquivo deve ter uma linha de cabecalho e uma linha por dia, com estas colunas:
-          </CardDescription>
+          <CardDescription>Uma linha de cabeçalho e uma linha por dia, com estas colunas:</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-1.5">
@@ -197,28 +196,33 @@ export default function ImportPage() {
               </Badge>
             ))}
           </div>
-          <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
-            <li>Data no formato DD/MM/AAAA. horários no formato HH:MM.</li>
-            <li>
-              Tipo de dia (opcional): {Object.values(DAY_TYPE_LABELS_PT).join(", ")}. Deixe em branco para
-              &quot;Dia normal&quot;.
-            </li>
-            <li>Entrada/almoço/Saida podem ficar em branco em dias de folga, férias, etc.</li>
-          </ul>
-          <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-sm">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl bg-muted/50 p-3 text-sm">
+              <p className="font-medium">Formato</p>
+              <p className="mt-1 text-muted-foreground">
+                Data em DD/MM/AAAA e horários em HH:MM. Em folgas e férias, deixe os horários em branco.
+              </p>
+            </div>
+            <div className="rounded-xl bg-muted/50 p-3 text-sm">
+              <p className="font-medium">Tipo de dia (opcional)</p>
+              <p className="mt-1 text-muted-foreground">
+                {Object.values(DAY_TYPE_LABELS_PT).join(", ")}. Em branco = &quot;Dia normal&quot;.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm">
             <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
             <p className="text-muted-foreground">
-              Se suas anotações antigas estao num formato diferente (texto livre, outra planilha, PDF), copie o
-              conteudo e peca para uma IA (Claude, ChatGPT, etc.) reescrever exatamente nas colunas acima antes de
-              enviar aqui.
+              <span className="font-medium text-foreground">Anotações em outro formato?</span> Peça para uma IA
+              (Claude, ChatGPT…) reescrever nas colunas acima antes de enviar.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => downloadImportTemplateCsv()}>
-              Baixar modelo (.csv)
+              <Download className="size-4" /> Modelo .csv
             </Button>
             <Button variant="outline" onClick={() => downloadImportTemplateXlsx()}>
-              Baixar modelo (.xlsx)
+              <Download className="size-4" /> Modelo .xlsx
             </Button>
           </div>
         </CardContent>
@@ -227,9 +231,9 @@ export default function ImportPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <StepBadge step={2} /> Enviar arquivo
+            <StepBadge step={2} /> Envie o arquivo
           </CardTitle>
-          <CardDescription>Aceita .csv, .txt (mesmo formato) ou .xlsx.</CardDescription>
+          <CardDescription>Aceita .csv, .txt ou .xlsx.</CardDescription>
         </CardHeader>
         <CardContent>
           <input
@@ -264,19 +268,24 @@ export default function ImportPage() {
               if (file) handleFileSelected(file);
             }}
             className={cn(
-              "flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-8 text-center transition-colors",
-              dragActive ? "border-primary bg-primary/5" : "border-border hover:border-foreground/30"
+              "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-10 text-center transition-colors",
+              dragActive ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-muted/30"
             )}
           >
-            {loading ? (
-              <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            ) : (
-              <FileUp className="size-6 text-muted-foreground" />
+            <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              {loading ? <Loader2 className="size-6 animate-spin" /> : <FileUp className="size-6" />}
+            </span>
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium">
+                {loading ? "Lendo arquivo..." : "Arraste o arquivo aqui ou clique para escolher"}
+              </p>
+              <p className="text-xs text-muted-foreground">Você revisa tudo antes de salvar.</p>
+            </div>
+            {fileName && (
+              <Badge variant="secondary" className="gap-1">
+                <FileSpreadsheet className="size-3" /> {fileName}
+              </Badge>
             )}
-            <p className="text-sm font-medium">
-              {loading ? "Lendo arquivo..." : "Arraste o arquivo aqui ou clique para escolher"}
-            </p>
-            {fileName && <p className="text-sm text-muted-foreground">Arquivo: {fileName}</p>}
           </div>
         </CardContent>
       </Card>

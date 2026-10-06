@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Check, FileDown, FileSpreadsheet, FileText, Loader2, type LucideIcon } from "lucide-react";
 
 import { useAuth } from "@/lib/auth/auth-provider";
-import { computeDay, overtimeValueForPeriod, regularHoursValue, resolveOvertimeOptions, summarizePeriod } from "@/lib/calculation-service";
+import { computeDay, overtimeValueForPeriod, regularHoursValue, summarizePeriod } from "@/lib/calculation-service";
 import { DayType, DAY_TYPE_LABELS_PT } from "@/lib/constants";
 import { formatDateBR, iterDates, weekdayLabel, type DateISO } from "@/lib/dates";
 import { formatMinutesAsHours, formatTimeOrPlaceholder } from "@/lib/formatting";
@@ -62,7 +62,7 @@ const WORK_COLUMN_GROUPS: { title: string; columns: { key: string; label: string
       { key: "Dia da semana", label: "Dia da semana" },
       { key: "Tipo de dia", label: "Tipo de dia" },
       { key: "Observacoes", label: "Observações" },
-      { key: "Status", label: "Status" },
+      { key: "Situacao", label: "Situação" },
     ],
   },
 ];
@@ -70,7 +70,7 @@ const WORK_COLUMN_GROUPS: { title: string; columns: { key: string; label: string
 const ALL_TOGGLEABLE_KEYS = WORK_COLUMN_GROUPS.flatMap((g) => g.columns.map((c) => c.key));
 
 export default function ReportsPage() {
-  const { user, settings } = useAuth();
+  const { user } = useAuth();
   const { requirePremium } = usePremiumGate();
   const [filter, setFilter] = useState<{ option: PeriodOption; customStart: DateISO; customEnd: DateISO }>({
     option: "month",
@@ -119,9 +119,7 @@ export default function ReportsPage() {
             exit_time: record?.exit_time ?? null,
             day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
           },
-          schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
-          undefined,
-          resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
+          schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null
         );
       });
 
@@ -147,7 +145,7 @@ export default function ReportsPage() {
             "Horas extras": formatMinutesAsHours(Math.max(day.balanceMinutes, 0)),
             "Tipo de dia": DAY_TYPE_LABELS_PT[day.dayType],
             Observacoes: record?.notes ?? "",
-            Status: day.isComplete ? "Completo" : "Incompleto",
+            Situacao: day.isComplete ? "Completo" : "Incompleto",
           };
         });
       } else {

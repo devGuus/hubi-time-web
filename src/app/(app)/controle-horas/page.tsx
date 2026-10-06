@@ -25,7 +25,6 @@ import {
   balanceMinutesOf,
   computeDay,
   overtimeMinutesOfPeriod,
-  resolveOvertimeOptions,
   summarizePeriod,
   type DayCalculation,
 } from "@/lib/calculation-service";
@@ -57,7 +56,7 @@ const WEEKDAY_INITIALS = "DSTQQSS";
 const MASK = "••••••";
 
 export default function HoursControlPage() {
-  const { user, settings, isPremium } = useAuth();
+  const { user, isPremium } = useAuth();
   const { requirePremium } = usePremiumGate();
   const [now, setNow] = useState(new Date());
   const [monthAnchor, setMonthAnchor] = useState<DateISO>(todayIso().slice(0, 8) + "01");
@@ -107,8 +106,7 @@ export default function HoursControlPage() {
         day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
       },
       schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
-      now,
-      resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
+      now
     );
   });
 

@@ -12,7 +12,6 @@ import { Lock, TrendingUp, Wallet } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-provider";
 import {
   computeDay,
-  resolveOvertimeOptions,
   overtimeValueForPeriod,
   regularHoursValue,
   summarizePeriod,
@@ -69,7 +68,7 @@ function rangeFor(option: PeriodOption): [DateISO, DateISO] {
 }
 
 export default function FinancePage() {
-  const { user, settings, isPremium } = useAuth();
+  const { user, isPremium } = useAuth();
   const { requirePremium } = usePremiumGate();
   const [now, setNow] = useState(new Date());
   const [period, setPeriod] = useState<PeriodOption>("month");
@@ -126,11 +125,10 @@ export default function FinancePage() {
           day_type: (record?.day_type as DayType) ?? DayType.NORMAL,
         },
         schedule ? { weekly_hours: schedule.weeklyHours, standard_entry_time: schedule.standardEntryTime } : null,
-        now,
-        resolveOvertimeOptions(record?.count_early_arrival_as_overtime, settings?.count_early_arrival_as_overtime)
+        now
       );
     });
-  }, [records, schedules, start, end, settings?.count_early_arrival_as_overtime, now]);
+  }, [records, schedules, start, end, now]);
 
   const summary = summarizePeriod(days, start, end);
   const periodBalanceMinutes = summary.workedMinutes - summary.expectedMinutes;

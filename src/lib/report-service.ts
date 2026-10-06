@@ -91,7 +91,7 @@ export const WORK_REPORT_HEADERS = [
   "Horas extras",
   "Tipo de dia",
   "Observacoes",
-  "Status",
+  "Situacao",
 ];
 
 export const FINANCE_REPORT_HEADERS = [

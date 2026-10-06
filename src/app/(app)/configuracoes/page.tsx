@@ -44,7 +44,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScreenIntro } from "@/components/shared/screen-intro";
 
@@ -161,32 +160,6 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="jornada" className="space-y-6 pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Chegada antecipada</CardTitle>
-              <CardDescription>
-                Chegar antes do horário de entrada, está configurado que não vale como hora extra -
-                você so &quot;chegou mais cedo&quot;. Ative se quiser que qualquer chegada antecipada conte como
-                hora extra.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex items-center gap-3">
-              <Switch
-                checked={settings?.count_early_arrival_as_overtime ?? false}
-                onCheckedChange={(checked) =>
-                  updateSettings({ count_early_arrival_as_overtime: checked }).catch(() =>
-                    toast.error("Erro ao salvar preferencia.")
-                  )
-                }
-              />
-              <span className="text-sm">
-                {settings?.count_early_arrival_as_overtime
-                  ? "Chegada antecipada sempre conta como hora extra"
-                  : "Chegada antecipada não conta como hora extra (padrão)"}
-              </span>
-            </CardContent>
-          </Card>
-
           {user && <ScheduleCard userId={user.id} />}
         </TabsContent>
 
@@ -379,7 +352,7 @@ function ScheduleCard({ userId }: { userId: string }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Carga horaria</CardTitle>
-        <CardDescription>O horário de entrada padrão (opcional) e usado na regra de chegada antecipada acima.</CardDescription>
+        <CardDescription>O horário de entrada padrão (opcional) define a partir de quando a hora extra passa a contar: chegar antes dele não gera hora extra.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {entries.length === 0 ? (
