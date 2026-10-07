@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AndroidAppCard } from "@/components/shared/android-app-card";
 import { ScreenIntro } from "@/components/shared/screen-intro";
 
 function initialsOf(name: string): string {
@@ -187,6 +188,8 @@ export default function ProfilePage() {
           />
         </CardContent>
       </Card>
+
+      <AndroidAppCard />
 
       <AlertDialog>
         <AlertDialogTrigger
