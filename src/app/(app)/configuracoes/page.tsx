@@ -169,7 +169,20 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="assinatura" className="space-y-6 pt-4">
-          <SubscriptionCard />
+          <Tabs defaultValue="planos">
+            <TabsList>
+              <TabsTrigger value="planos">Planos</TabsTrigger>
+              <TabsTrigger value="codigo">Código promocional</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="planos" className="pt-4">
+              <SubscriptionCard />
+            </TabsContent>
+
+            <TabsContent value="codigo" className="pt-4">
+              <RedeemCodeCard />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </div>
@@ -269,6 +282,63 @@ function SubscriptionCard() {
             );
           })}
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RedeemCodeCard() {
+  const { refreshProfile } = useAuth();
+  const [code, setCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleRedeem() {
+    const trimmed = code.trim();
+    if (!trimmed) {
+      toast.error("Informe o codigo.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/redeem-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: trimmed }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Erro ao resgatar codigo.");
+      toast.success(data.message ?? "Codigo resgatado com sucesso!");
+      setCode("");
+      await refreshProfile();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao resgatar codigo.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Código promocional</CardTitle>
+        <CardDescription>Recebeu um código de presente ou promoção? Insira abaixo para ativar seu plano.</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap items-end gap-3">
+        <div className="min-w-48 flex-1 space-y-1">
+          <Label className="text-xs">Código</Label>
+          <Input
+            placeholder="Ex.: HUBI-7K2M-9QXT"
+            value={code}
+            disabled={submitting}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleRedeem();
+            }}
+          />
+        </div>
+        <Button onClick={handleRedeem} disabled={submitting || !code.trim()}>
+          {submitting ? "Resgatando..." : "Resgatar"}
+        </Button>
       </CardContent>
     </Card>
   );

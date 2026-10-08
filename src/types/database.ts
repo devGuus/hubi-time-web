@@ -379,6 +379,62 @@ export type Database = {
         }
         Relationships: []
       }
+      redemption_codes: {
+        Row: {
+          active: boolean
+          code_hash: string
+          created_at: string
+          id: string
+          label: string | null
+          plan: string
+        }
+        Insert: {
+          active?: boolean
+          code_hash: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          plan: string
+        }
+        Update: {
+          active?: boolean
+          code_hash?: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          plan?: string
+        }
+        Relationships: []
+      }
+      redemption_code_uses: {
+        Row: {
+          code_id: string
+          id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          code_id: string
+          id?: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          code_id?: string
+          id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemption_code_uses_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "redemption_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_transactions: {
         Row: {
           amount: number

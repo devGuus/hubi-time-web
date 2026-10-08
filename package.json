@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "codes:generate": "node scripts/generate-redemption-codes.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
