@@ -74,20 +74,18 @@ function hashCode(raw) {
   return createHash("sha256").update(normalizeCode(raw)).digest("hex");
 }
 
-function printUsageAndExit() {
-  console.error(
-    [
-      "",
-      "Uso: node scripts/generate-redemption-codes.mjs --plan=<monthly|semestral|annual> [--count=N] [--label=\"texto\"]",
-      "",
-      "Exemplos:",
-      '  node scripts/generate-redemption-codes.mjs --plan=monthly --count=5 --label="Equipe outubro 2026"',
-      '  node scripts/generate-redemption-codes.mjs --plan=annual --label="Presente Natal"',
-      "",
-    ].join("\n")
-  );
-  process.exit(1);
-}
+/** Erros desta classe so imprimem a mensagem (sem o prefixo "Erro ao gerar codigos"). */
+class UsageError extends Error {}
+
+const USAGE = [
+  "",
+  "Uso: node scripts/generate-redemption-codes.mjs --plan=<monthly|semestral|annual> [--count=N] [--label=\"texto\"]",
+  "",
+  "Exemplos:",
+  '  node scripts/generate-redemption-codes.mjs --plan=monthly --count=5 --label="Equipe outubro 2026"',
+  '  node scripts/generate-redemption-codes.mjs --plan=annual --label="Presente Natal"',
+  "",
+].join("\n");
 
 async function main() {
   loadEnvLocal();
@@ -95,10 +93,9 @@ async function main() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceRoleKey) {
-    console.error(
+    throw new UsageError(
       "Faltam NEXT_PUBLIC_SUPABASE_URL e/ou SUPABASE_SERVICE_ROLE_KEY no .env.local. Copie a service_role key em Supabase > Settings > API."
     );
-    process.exit(1);
   }
 
   const options = parseArgs();
@@ -106,10 +103,9 @@ async function main() {
   const count = Number(options.count ?? 1);
   const label = options.label ?? null;
 
-  if (!["monthly", "semestral", "annual"].includes(plan)) printUsageAndExit();
+  if (!["monthly", "semestral", "annual"].includes(plan)) throw new UsageError(USAGE);
   if (!Number.isInteger(count) || count < 1 || count > 100) {
-    console.error("O numero de codigos (--count) deve ser um inteiro entre 1 e 100.");
-    process.exit(1);
+    throw new UsageError("O numero de codigos (--count) deve ser um inteiro entre 1 e 100.");
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -125,6 +121,12 @@ async function main() {
         label,
       });
       if (!error) return code;
+      if (error.code === "PGRST205" || error.message?.includes("schema cache")) {
+        throw new Error(
+          "A tabela 'redemption_codes' ainda nao existe no banco. Rode a migracao " +
+            "supabase/redemption_codes_migration_2026_10_07.sql no SQL Editor do Supabase e tente de novo."
+        );
+      }
       if (error.code !== "23505") throw new Error(error.message);
       // colisao de hash (extremamente improvavel) - tenta outro codigo
     }
@@ -141,7 +143,11 @@ async function main() {
   console.log("\nEstes codigos so aparecem aqui - nao ficam salvos em nenhum arquivo. Copie agora.\n");
 }
 
+// process.exitCode (nao process.exit()) de proposito: encerrar a forca aqui
+// pode derrubar o processo no meio do fechamento de um handle de rede do
+// cliente Supabase no Windows ("Assertion failed ... uv_handle_t").
 main().catch((error) => {
-  console.error("Erro ao gerar codigos:", error.message ?? error);
-  process.exit(1);
+  if (!(error instanceof UsageError)) console.error("Erro ao gerar codigos:");
+  console.error(error.message ?? error);
+  process.exitCode = 1;
 });
